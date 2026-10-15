@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafePass | Менеджер паролей</title>
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --primary: #3b82f6; --success: #10b981; --danger: #ef4444; --text: #f8fafc; --muted: #94a3b8; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+        
+        header { background: rgba(15,23,42,0.95); padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; }
+        h1 { background: linear-gradient(to right, var(--primary), var(--success)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.2em; margin-bottom: 5px; }
+        
+        main { flex: 1; max-width: 800px; margin: 30px auto; padding: 0 20px; width: 100%; }
+        .card { background: var(--card); padding: 25px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px; }
+        
+        input[type="text"], input[type="password"] { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; margin-bottom: 15px; font-size: 16px; outline: none; }
+        input:focus { border-color: var(--primary); }
+        
+        button { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; width: 100%; margin-bottom: 10px; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button.secondary { background: #334155; }
+        button.danger { background: var(--danger); }
+        
+        .vault-item { background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .vault-info div:first-child { font-weight: bold; color: var(--primary); }
+        .vault-info div:last-child { font-size: 0.85em; color: var(--muted); margin-top: 3px; }
+        .btn-small { padding: 6px 12px; font-size: 0.85em; width: auto; margin: 0 0 0 5px; }
+        
+        .hidden { display: none !important; }
+        footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.85em; border-top: 1px solid rgba(255,255,255,0.05); }
+
+        /* Стили для чекбоксов */
+        .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .checkbox-label { 
+            display: flex; align-items: center; gap: 10px; 
+            background: rgba(15,23,42,0.5); padding: 10px; 
+            border-radius: 8px; cursor: pointer; border: 1px solid transparent;
+            transition: 0.2s; user-select: none;
+        }
+        .checkbox-label:hover { border-color: var(--primary); background: rgba(59,130,246,0.1); }
+        .checkbox-label input { 
+            width: 18px; height: 18px; accent-color: var(--primary); 
+            cursor: pointer; margin: 0; 
+        }
+        .checkbox-label span { font-size: 0.95em; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🔐 SafePass</h1>
+    <p style="color: var(--muted)">Локальное AES-256 шифрование в браузере</p>
+</header>
+
+<main>
+    <!-- ЭКРАН ВХОДА -->
+    <div id="authScreen" class="card">
+        <h2 id="authTitle" style="margin-bottom:15px">Установите Мастер-пароль</h2>
+        <p id="authDesc" style="color:var(--muted); margin-bottom:20px; font-size:0.9em">Этот пароль используется для шифрования ключа. Без него данные не прочитать.</p>
+        <input type="password" id="masterPass" placeholder="Введите мастер-пароль...">
+        <input type="password" id="masterPassConfirm" placeholder="Повторите мастер-пароль..." class="hidden">
+        <button onclick="handleAuth()" id="authBtn">Создать хранилище</button>
+        <p id="authError" style="color:var(--danger); margin-top:10px; font-size:0.9em"></p>
+    </div>
+
+    <!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
+    <div id="appScreen" class="hidden">
+        <!-- ХРАНИЛИЩЕ -->
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                <h2>Моё хранилище</h2>
+                <button class="secondary btn-small" onclick="logout()">🔒 Заблокировать</button>
+            </div>
+            
+            <input type="text" id="siteName" placeholder="Название сайта (например, VK)">
+            <input type="text" id="loginName" placeholder="Логин / Email">
+            <input type="text" id="passInput" placeholder="Пароль (сгенерируйте ниже или введите свой)">
+            
+            <button onclick="addToVault()">💾 Сохранить запись</button>
+            
+            <div style="display:flex; gap:10px; margin-top:10px">
+                <button class="secondary" onclick="exportVault()"> Экспорт</button>
+                <label class="btn secondary" style="cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">
+                     Импорт <input type="file" accept=".json" onchange="importVault(event)" style="display:none">
+                </label>
+            </div>
+            
+            <div id="vaultList" style="margin-top:20px"></div>
+        </div>
+
+        <!-- ГЕНЕРАТОР -->
+        <div class="card">
+            <h2 style="margin-bottom:15px">Генератор паролей</h2>
+            <div id="genDisplay" style="background:#0f172a; border:1px solid #334155; border-radius:8px; padding:15px; font-family:monospace; font-size:1.4em; text-align:center; margin-bottom:15px; word-break:break-all; min-height: 54px; display: flex; align-items: center; justify-content: center;">Нажми "Сгенерировать"</div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                <label style="font-weight: 600;">Длина: <span id="lenVal" style="color:var(--primary)">16</span></label>
+                <input type="range" id="length" min="4" max="64" value="16" oninput="document.getElementById('lenVal').textContent=this.value" style="flex:1; margin:0 15px; accent-color:var(--primary); height: 6px;">
+            </div>
+            
+            <div class="checkbox-grid">
+                <label class="checkbox-label"><input type="checkbox" id="useUpper" checked> <span>A-Z</span></label>
+                <label class="checkbox-label"><input type="checkbox" id="useLower" checked> <span>a-z</span></label>
+                <label class="checkbox-label"><input type="checkbox" id="useNum" checked> <span>0-9</span></label>
+                <label class="checkbox-label"><input type="checkbox" id="useSym" checked> <span>!@#</span></label>
+                <label class="checkbox-label"><input type="checkbox" id="useRusUpper"> <span>А-Я</span></label>
+                <label class="checkbox-label"><input type="checkbox" id="useRusLower"> <span>а-я</span></label>
+            </div>
+            
+            <button onclick="generate()">⚡ Сгенерировать</button>
+            <button class="secondary" onclick="copyGen()" style="margin-top:5px"> Копировать</button>
+        </div>
+    </div>
+</main>
+
+<footer>© 2026 | Надёжные пароли и кибербезопасность</footer>
+
+<script>
+// === КРИПТОГРАФИЧЕСКОЕ ЯДРО ===
+let cryptoKey = null; 
+
+async function deriveKey(password) {
+    const enc = new TextEncoder();
+    const keyMaterial = await window.crypto.subtle.importKey("raw", enc.encode(password), {name: "PBKDF2"}, false, ["deriveKey"]);
+    return window.crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt: enc.encode("safePassSalt_v1"), iterations: 100000, hash: "SHA-256" },
+        keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
+    );
+}
+
+async function encryptData(data) {
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const encrypted = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv }, cryptoKey, new TextEncoder().encode(JSON.stringify(data)));
+    return { iv: Array.from(iv), data: Array.from(new Uint8Array(encrypted)) };
+}
+
+async function decryptData(encryptedObj) {
+    try {
+        const decrypted = await window.crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: new Uint8Array(encryptedObj.iv) }, 
+            cryptoKey, 
+            new Uint8Array(encryptedObj.data)
+        );
+        return JSON.parse(new TextDecoder().decode(decrypted));
+    } catch(e) { return null; }
+}
+
+// === АВТОРИЗАЦИЯ ===
+async function handleAuth() {
+    const pass = document.getElementById('masterPass').value;
+    const confirm = document.getElementById('masterPassConfirm').value;
+    const errEl = document.getElementById('authError');
+    errEl.textContent = '';
+    
+    if(pass.length < 6) { errEl.textContent = 'Минимум 6 символов'; return; }
+    
+    const hasVault = localStorage.getItem('safePassEncrypted') !== null;
+    
+    if(!hasVault) {
+        if(pass !== confirm) { errEl.textContent = 'Пароли не совпадают'; return; }
+        cryptoKey = await deriveKey(pass);
+        await saveEncrypted([]);
+        showApp();
+    } else {
+        cryptoKey = await deriveKey(pass);
+        const test = await loadEncrypted();
+        if(test === null) {
+            errEl.textContent = 'Неверный мастер-пароль!';
+            cryptoKey = null;
+            return;
+        }
+        showApp();
+    }
+}
+
+async function saveEncrypted(data) {
+    const encrypted = await encryptData(data);
+    localStorage.setItem('safePassEncrypted', JSON.stringify(encrypted));
+}
+
+async function loadEncrypted() {
+    const raw = localStorage.getItem('safePassEncrypted');
+    if(!raw) return [];
+    return await decryptData(JSON.parse(raw));
+}
+
+function showApp() {
+    document.getElementById('authScreen').classList.add('hidden');
+    document.getElementById('appScreen').classList.remove('hidden');
+    renderVault();
+    generate();
+}
+
+function logout() {
+    cryptoKey = null;
+    document.getElementById('appScreen').classList.add('hidden');
+    document.getElementById('authScreen').classList.remove('hidden');
+    document.getElementById('masterPass').value = '';
+    document.getElementById('masterPassConfirm').value = '';
+    document.getElementById('authError').textContent = '';
+    
+    const hasVault = localStorage.getItem('safePassEncrypted') !== null;
+    document.getElementById('authTitle').textContent = hasVault ? 'Введите Мастер-пароль' : 'Установите Мастер-пароль';
+    document.getElementById('authDesc').textContent = hasVault 
+        ? 'Введите пароль для расшифровки хранилища.' 
+        : 'Этот пароль будет использоваться для шифрования всех ваших данных.';
+    document.getElementById('masterPassConfirm').classList.toggle('hidden', hasVault);
+    document.getElementById('authBtn').textContent = hasVault ? 'Разблокировать' : 'Создать хранилище';
+}
+
+(function initAuth() {
+    const hasVault = localStorage.getItem('safePassEncrypted') !== null;
+    document.getElementById('authTitle').textContent = hasVault ? 'Введите Мастер-пароль' : 'Установите Мастер-пароль';
+    document.getElementById('masterPassConfirm').classList.toggle('hidden', hasVault);
+    document.getElementById('authBtn').textContent = hasVault ? 'Разблокировать' : 'Создать хранилище';
+})();
+
+// === УПРАВЛЕНИЕ ХРАНИЛИЩЕМ ===
+async function addToVault() {
+    const site = document.getElementById('siteName').value.trim();
+    const login = document.getElementById('loginName').value.trim();
+    const pass = document.getElementById('passInput').value.trim();
+    if(!site || !pass) { alert('Заполните название сайта и пароль!'); return; }
+    
+    const vault = await loadEncrypted();
+    vault.push({ id: Date.now(), site, login, pass });
+    await saveEncrypted(vault);
+    
+    document.getElementById('siteName').value = '';
+    document.getElementById('loginName').value = '';
+    document.getElementById('passInput').value = '';
+    renderVault();
+}
+
+async function deleteFromVault(id) {
+    if(!confirm('Удалить эту запись?')) return;
+    const vault = (await loadEncrypted()).filter(i => i.id !== id);
+    await saveEncrypted(vault);
+    renderVault();
+}
+
+async function copyFromVault(pass) {
+    navigator.clipboard.writeText(pass);
+    alert('Скопировано!');
+}
+
+async function renderVault() {
+    const list = document.getElementById('vaultList');
+    const vault = await loadEncrypted();
+    if(vault.length === 0) { list.innerHTML = '<div style="text-align:center; padding:30px; color:var(--muted)">Хранилище пусто</div>'; return; }
+    
+    list.innerHTML = vault.map(item => `
+        <div class="vault-item">
+            <div class="vault-info"><div>${item.site}</div><div>${item.login || 'Без логина'}</div></div>
+            <div>
+                <button class="secondary btn-small" onclick="copyFromVault('${item.pass}')"></button>
+                <button class="danger btn-small" onclick="deleteFromVault(${item.id})">🗑️</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function exportVault() {
+    const raw = localStorage.getItem('safePassEncrypted');
+    if(!raw) { alert('Хранилище пусто!'); return; }
+    const blob = new Blob([raw], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'safepass_encrypted_backup.json'; a.click();
+    URL.revokeObjectURL(url);
+}
+
+async function importVault(event) {
+    const file = event.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            const imported = JSON.parse(e.target.result);
+            if(imported.iv && imported.data) {
+                const test = await decryptData(imported);
+                if(test !== null) {
+                    const current = await loadEncrypted();
+                    const merged = [...current, ...test.filter(i => !current.some(c => c.id === i.id))];
+                    await saveEncrypted(merged);
+                    alert(`Импортировано ${test.length} записей!`);
+                    renderVault();
+                } else {
+                    alert('Не удалось расшифровать файл! Возможно, он создан с другим мастер-паролем.');
+                }
+            } else { alert('Некорректный формат файла!'); }
+        } catch(err) { alert('Ошибка импорта!'); }
+    };
+    reader.readAsText(file);
+}
+
+// === ГЕНЕРАТОР ПАРОЛЕЙ ===
+const chars = { 
+    upper:'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 
+    lower:'abcdefghijklmnopqrstuvwxyz', 
+    num:'0123456789', 
+    sym:'!@#$%^&*()_+-=[]{}|;:,.<>?/~',
+    rusUpper:'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ',
+    rusLower:'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
+};
+
+function generate() {
+    let pool = '';
+    if(document.getElementById('useUpper').checked) pool += chars.upper;
+    if(document.getElementById('useLower').checked) pool += chars.lower;
+    if(document.getElementById('useNum').checked) pool += chars.num;
+    if(document.getElementById('useSym').checked) pool += chars.sym;
+    if(document.getElementById('useRusUpper').checked) pool += chars.rusUpper;
+    if(document.getElementById('useRusLower').checked) pool += chars.rusLower;
+    
+    if(!pool) { alert('Выберите хотя бы один тип символов!'); return; }
+    
+    const len = parseInt(document.getElementById('length').value);
+    const arr = new Uint32Array(len); 
+    crypto.getRandomValues(arr);
+    
+    let pass = ''; 
+    for(let i=0; i<len; i++) pass += pool[arr[i] % pool.length];
+    
+    document.getElementById('genDisplay').textContent = pass;
+    document.getElementById('passInput').value = pass;
+}
+
+function copyGen() {
+    const p = document.getElementById('genDisplay').textContent;
+    if(p !== 'Нажми "Сгенерировать"') { navigator.clipboard.writeText(p); alert('Скопировано!'); }
+}
+</script>
+</body>
+</html>
