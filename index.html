@@ -1,335 +1,967 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="default">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SafePass | Менеджер паролей</title>
-    <style>
-        :root { --bg: #0f172a; --card: #1e293b; --primary: #3b82f6; --success: #10b981; --danger: #ef4444; --text: #f8fafc; --muted: #94a3b8; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
-        
-        header { background: rgba(15,23,42,0.95); padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; }
-        h1 { background: linear-gradient(to right, var(--primary), var(--success)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.2em; margin-bottom: 5px; }
-        
-        main { flex: 1; max-width: 800px; margin: 30px auto; padding: 0 20px; width: 100%; }
-        .card { background: var(--card); padding: 25px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px; }
-        
-        input[type="text"], input[type="password"] { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; margin-bottom: 15px; font-size: 16px; outline: none; }
-        input:focus { border-color: var(--primary); }
-        
-        button { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; width: 100%; margin-bottom: 10px; }
-        button:hover { opacity: 0.9; transform: translateY(-1px); }
-        button.secondary { background: #334155; }
-        button.danger { background: var(--danger); }
-        
-        .vault-item { background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.2); border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .vault-info div:first-child { font-weight: bold; color: var(--primary); }
-        .vault-info div:last-child { font-size: 0.85em; color: var(--muted); margin-top: 3px; }
-        .btn-small { padding: 6px 12px; font-size: 0.85em; width: auto; margin: 0 0 0 5px; }
-        
-        .hidden { display: none !important; }
-        footer { text-align: center; padding: 20px; color: var(--muted); font-size: 0.85em; border-top: 1px solid rgba(255,255,255,0.05); }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafePass | Менеджер паролей</title>
+<style>
+:root {
+    --bg: #0f172a; --card: rgba(30, 41, 59, 0.85); --text: #f1f5f9; --muted: #94a3b8;
+    --primary: #3b82f6; --accent: #10b981; --danger: #ef4444; --warn: #f59e0b;
+    --border: rgba(255,255,255,0.08); --glass: blur(14px);
+    --shadow: 0 10px 40px rgba(0,0,0,0.4); --radius: 16px;
+}
+[data-theme="light"] {
+    --bg: #f8fafc; --card: rgba(255,255,255,0.95); --text: #0f172a; --muted: #64748b;
+    --primary: #2563eb; --accent: #059669; --danger: #dc2626; --warn: #d97706;
+    --border: rgba(0,0,0,0.08); --shadow: 0 10px 40px rgba(0,0,0,0.08);
+}
+[data-theme="dark"] {
+    --bg: #020617; --card: rgba(15, 23, 42, 0.95); --text: #e2e8f0; --muted: #64748b;
+    --primary: #60a5fa; --accent: #34d399; --danger: #f87171; --warn: #fbbf24;
+    --border: rgba(255,255,255,0.05); --shadow: 0 10px 40px rgba(0,0,0,0.6);
+}
 
-        /* Стили для чекбоксов */
-        .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
-        .checkbox-label { 
-            display: flex; align-items: center; gap: 10px; 
-            background: rgba(15,23,42,0.5); padding: 10px; 
-            border-radius: 8px; cursor: pointer; border: 1px solid transparent;
-            transition: 0.2s; user-select: none;
-        }
-        .checkbox-label:hover { border-color: var(--primary); background: rgba(59,130,246,0.1); }
-        .checkbox-label input { 
-            width: 18px; height: 18px; accent-color: var(--primary); 
-            cursor: pointer; margin: 0; 
-        }
-        .checkbox-label span { font-size: 0.95em; font-weight: 500; }
-    </style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',system-ui,sans-serif; transition: background .25s, color .25s, border-color .25s; }
+
+body { 
+    background: var(--bg); color: var(--text); min-height:100vh; display:flex; flex-direction:column; overflow-x:hidden; position: relative;
+}
+
+header {
+    padding: 14px 20px; backdrop-filter: var(--glass); position:sticky; top:0; z-index:100;
+    border-bottom: 1px solid var(--border); display:flex; align-items:center; gap:14px;
+    background: rgba(15,23,42,0.7);
+}
+[data-theme="light"] header { background: rgba(248,250,252,0.8); }
+[data-theme="dark"] header { background: rgba(2,6,23,0.9); }
+
+.burger {
+    background: none; border: none; color: var(--text); cursor: pointer;
+    width: 42px; height: 42px; display:flex; align-items:center; justify-content:center;
+    border-radius: 10px; transition: .2s;
+}
+.burger:hover { background: rgba(255,255,255,0.08); }
+.burger svg { width: 24px; height: 24px; }
+
+h1 {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    font-size: 1.5em; font-weight: 800; letter-spacing: -0.5px; flex:1;
+    display: flex; align-items: center; gap: 10px;
+}
+h1 svg { width: 28px; height: 28px; flex-shrink: 0; }
+
+.lock-btn {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    width: 40px; height: 40px; border-radius: 10px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: .2s;
+}
+.lock-btn svg { width: 20px; height: 20px; }
+.lock-btn:hover { color: var(--danger); border-color: var(--danger); background: rgba(239, 68, 68, 0.1); transform: scale(1.05); }
+
+.overlay { position:fixed; inset:0; background: rgba(0,0,0,0.6); z-index:199; opacity:0; pointer-events:none; }
+.overlay.active { opacity:1; pointer-events:all; }
+
+.sidebar {
+    position:fixed; top:0; left:-340px; width:320px; height:100%;
+    background: var(--card); backdrop-filter: var(--glass);
+    border-right: 1px solid var(--border); z-index:200;
+    padding: 24px 20px; display:flex; flex-direction:column; gap:22px;
+    box-shadow: var(--shadow); overflow-y:auto;
+}
+.sidebar.active { left:0; }
+
+.sidebar-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.close-btn { background:none; border:none; color:var(--muted); cursor:pointer; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:8px; }
+.close-btn svg { width: 20px; height: 20px; }
+.close-btn:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+
+.section-label { font-size:.75em; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:14px; font-weight:700; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+
+.theme-list { display:flex; gap:16px; justify-content: center; padding: 10px 0; }
+.theme-circle {
+    width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+    border: 3px solid transparent; transition: all .25s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.theme-circle:hover { transform: scale(1.15); }
+.theme-circle.active { border-color: var(--text); transform: scale(1.2); box-shadow: 0 0 0 3px rgba(255,255,255,0.2); }
+.theme-circle[data-theme="default"] { background: linear-gradient(135deg, #3b82f6, #10b981); }
+.theme-circle[data-theme="light"] { background: linear-gradient(135deg, #f8fafc, #e2e8f0); border: 2px solid #cbd5e1; }
+.theme-circle[data-theme="dark"] { background: linear-gradient(135deg, #020617, #1e293b); }
+
+.stats-box { background: rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:12px; padding:16px; display:flex; justify-content:space-between; align-items:center; }
+.stat-val { font-size:1.6em; font-weight:800; color: var(--primary); }
+.stat-lbl { font-size:.85em; color: var(--muted); }
+
+.accordion { margin-bottom: 6px; }
+.acc-header {
+    display:flex; justify-content:space-between; align-items:center;
+    padding: 13px 14px; background: rgba(0,0,0,0.2); border:1px solid var(--border);
+    border-radius: 10px; cursor:pointer; font-weight:700; font-size:.95em; user-select:none;
+}
+.acc-header:hover { border-color: var(--primary); }
+.acc-arrow { transition: transform .3s; color: var(--muted); display: flex; }
+.acc-arrow svg { width: 16px; height: 16px; }
+.acc-header.open .acc-arrow { transform: rotate(180deg); }
+.acc-content { max-height:0; overflow:hidden; transition: max-height .3s ease-out; display:flex; flex-direction:column; gap:7px; margin-top:0; }
+.acc-content.open { max-height: 500px; overflow-y:auto; margin-top:8px; }
+
+.list-item {
+    background: rgba(0,0,0,0.15); border:1px solid var(--border);
+    padding: 10px 12px; border-radius: 9px; cursor:pointer; font-size:.9em;
+    display:flex; align-items:center; gap:10px;
+}
+.list-item:hover { border-color: var(--primary); background: rgba(59,130,246,0.1); }
+.list-icon { width:28px; height:28px; border-radius:6px; background: var(--primary); color:white; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.list-icon svg { width: 16px; height: 16px; }
+.list-text { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.list-sub { font-size:.75em; color: var(--muted); display:block; margin-top:2px; }
+
+.backup-section { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--border); }
+.backup-row { display:flex; gap:10px; }
+.backup-btn {
+    flex:1; padding:12px; background: rgba(0,0,0,0.2); border:1px solid var(--border);
+    border-radius:10px; color: var(--text); cursor:pointer; font-size:.88em; font-weight:600;
+    display:flex; align-items:center; justify-content:center; gap:7px; transition:.2s;
+}
+.backup-btn:hover { border-color: var(--primary); background: rgba(59,130,246,0.1); }
+.backup-btn svg { width: 16px; height: 16px; }
+.backup-btn input { display:none; }
+
+.lang-switcher { display: flex; gap: 8px; margin-top: 12px; }
+.lang-btn {
+    flex: 1; padding: 10px; background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--muted); cursor: pointer; font-size: 0.9em; font-weight: 700;
+    text-align: center; transition: .2s;
+}
+.lang-btn:hover { border-color: var(--primary); color: var(--text); }
+.lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+main { flex:1; max-width:850px; margin:24px auto; padding:0 18px; width:100%; }
+.card { background: var(--card); padding:22px; border-radius: var(--radius); border:1px solid var(--border); backdrop-filter: var(--glass); box-shadow: var(--shadow); margin-bottom:18px; }
+
+.tabs { display:flex; gap:8px; margin-bottom:18px; flex-wrap: wrap; }
+.tab {
+    flex:1; min-width: 120px; padding:13px 10px; background: rgba(0,0,0,0.2); border:1px solid var(--border);
+    border-radius:12px; color: var(--muted); cursor:pointer; font-weight:600; font-size:.9em;
+    display:flex; align-items:center; justify-content:center; gap:7px; transition:.2s;
+}
+.tab svg { width: 18px; height: 18px; flex-shrink: 0; }
+.tab:hover { border-color: var(--primary); }
+.tab.active { background: var(--primary); color:white; border-color: var(--primary); }
+
+input, textarea {
+    width:100%; padding:13px; background: rgba(0,0,0,0.25); border:1px solid var(--border);
+    color: var(--text); border-radius:10px; margin-bottom:11px; font-size:15px; outline:none; font-family:inherit;
+}
+input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+textarea { resize:vertical; min-height:100px; }
+
+.btn {
+    background: var(--primary); color:white; border:none; padding:13px 18px;
+    border-radius:10px; cursor:pointer; font-weight:700; transition:.2s; width:100%;
+    display:flex; align-items:center; justify-content:center; gap:8px; font-size:.95em;
+}
+.btn svg { width: 18px; height: 18px; }
+.btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+.btn.sec { background: rgba(255,255,255,0.08); color: var(--text); border:1px solid var(--border); }
+.btn.danger { background: var(--danger); }
+.btn.small { width:auto; padding:8px 14px; font-size:.85em; }
+.btn.icon { width:42px; padding:0; flex-shrink:0; }
+.btn.accent { background: var(--accent); }
+.hidden { display:none !important; }
+
+.gen-display {
+    background: rgba(0,0,0,0.35); border:1px dashed var(--accent); border-radius:10px;
+    padding:18px; font-family:'Courier New',monospace; font-size:1.3em; text-align:center;
+    margin-bottom:18px; word-break:break-all; min-height:55px; display:flex; align-items:center; justify-content:center;
+    color: var(--accent);
+}
+.check-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); gap:9px; margin-bottom:18px; }
+.check-label {
+    display:flex; align-items:center; gap:9px; background: rgba(0,0,0,0.2); padding:11px;
+    border-radius:9px; cursor:pointer; border:1px solid transparent; font-size:.9em;
+}
+.check-label:hover { border-color: var(--accent); background: rgba(16,185,129,0.08); }
+.check-label input { width:17px; height:17px; accent-color: var(--accent); margin:0; cursor:pointer; }
+
+.auth-card { max-width: 500px; margin: 40px auto; }
+.err { color: var(--danger); margin-top:10px; font-size:.9em; min-height:20px; font-weight:600; }
+.hint-enter { font-size: .78em; color: var(--muted); margin-top: -6px; margin-bottom: 10px; font-style: italic; }
+
+.detail-view { display:flex; flex-direction:column; gap:13px; animation: fadeIn .3s; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.field { display:flex; flex-direction:column; gap:5px; }
+.field-label { font-size:.72em; color: var(--muted); text-transform:uppercase; font-weight:700; letter-spacing:.5px; }
+.field-row { display:flex; gap:7px; align-items:center; }
+.field-input { flex:1; padding:11px; background: rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:9px; color: var(--text); font-size:14px; outline:none; margin:0; }
+.field-input:focus { border-color: var(--primary); }
+.field-input[readonly] { opacity:.75; cursor:default; }
+.detail-actions { display:flex; gap:7px; margin-top:10px; flex-wrap:wrap; }
+.back-btn { background:none; border:1px solid var(--border); color: var(--muted); margin-bottom:12px; width:auto; padding:7px 14px; border-radius:8px; cursor:pointer; font-size:.85em; display: flex; align-items: center; gap: 6px; }
+.back-btn svg { width: 16px; height: 16px; }
+.back-btn:hover { color: var(--text); border-color: var(--text); }
+
+footer { text-align:center; padding:24px; color: var(--muted); font-size:.82em; border-top:1px solid var(--border); margin-top:auto; position: relative; z-index: 1; }
+
+#toast-container {
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+}
+.toast {
+    pointer-events: auto;
+    background: var(--card); border: 1px solid var(--border); color: var(--text);
+    padding: 14px 20px; border-radius: 12px; box-shadow: var(--shadow);
+    display: flex; align-items: center; gap: 12px; font-size: 0.9em; font-weight: 600;
+    backdrop-filter: var(--glass);
+    animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1), fadeOut 0.3s ease 2.7s forwards;
+    min-width: 260px;
+}
+.toast.success { border-left: 4px solid var(--accent); }
+.toast.error { border-left: 4px solid var(--danger); }
+.toast.info { border-left: 4px solid var(--primary); }
+.toast svg { width: 20px; height: 20px; flex-shrink: 0; }
+@keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes fadeOut { to { opacity: 0; transform: translateY(10px); } }
+
+@media (max-width: 600px) {
+    .sidebar { width: 100%; left: -100%; }
+    h1 { font-size: 1.25em; }
+    .tab { min-width: 90px; font-size: .82em; padding: 10px 6px; }
+}
+</style>
 </head>
 <body>
 
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+<div id="toast-container"></div>
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h2 style="font-size:1.2em;" data-i18n="menu">Меню</h2>
+        <button class="close-btn" onclick="toggleSidebar()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+    </div>
+
+    <div id="menuContent">
+        <div>
+            <div class="section-label" data-i18n="theme">Тема</div>
+            <div class="theme-list">
+                <div class="theme-circle active" data-theme="default" onclick="setTheme('default', this)" title="Обычная"></div>
+                <div class="theme-circle" data-theme="light" onclick="setTheme('light', this)" title="Светлая"></div>
+                <div class="theme-circle" data-theme="dark" onclick="setTheme('dark', this)" title="Тёмная"></div>
+            </div>
+        </div>
+
+        <div>
+            <div class="stats-box">
+                <span class="stat-lbl" data-i18n="savedRecords">Сохранено записей</span>
+                <span class="stat-val" id="statCount">0</span>
+            </div>
+        </div>
+
+        <div class="accordion">
+            <div class="acc-header" onclick="toggleAcc('accP')">
+                <span style="display:flex;align-items:center;gap:8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+                    <span data-i18n="passwords">Пароли</span>
+                </span>
+                <span class="acc-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+            </div>
+            <div class="acc-content" id="accP"></div>
+        </div>
+
+        <div class="accordion">
+            <div class="acc-header" onclick="toggleAcc('accC')">
+                <span style="display:flex;align-items:center;gap:8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span data-i18n="contacts">Контакты</span>
+                </span>
+                <span class="acc-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+            </div>
+            <div class="acc-content" id="accC"></div>
+        </div>
+
+        <div class="accordion">
+            <div class="acc-header" onclick="toggleAcc('accN')">
+                <span style="display:flex;align-items:center;gap:8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <span data-i18n="notes">Заметки</span>
+                </span>
+                <span class="acc-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+            </div>
+            <div class="acc-content" id="accN"></div>
+        </div>
+
+        <div class="backup-section">
+            <div class="section-label" data-i18n="backup">Резервная копия</div>
+            <div class="backup-row">
+                <button class="backup-btn" onclick="exportVault()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <span data-i18n="export">Экспорт</span>
+                </button>
+                <button class="backup-btn">
+                    <label style="cursor:pointer; display:flex; align-items:center; justify-content:center; gap:7px; width:100%;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <span data-i18n="import">Импорт</span><input type="file" accept=".json" onchange="importVault(event)">
+                    </label>
+                </button>
+            </div>
+        </div>
+
+        <div>
+            <div class="section-label" data-i18n="language">Язык</div>
+            <div class="lang-switcher">
+                <button class="lang-btn active" onclick="setLang('ru', this)">RU</button>
+                <button class="lang-btn" onclick="setLang('en', this)">EN</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="detailView" class="hidden detail-view">
+        <button class="back-btn" onclick="showMenu()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <span data-i18n="back">Назад</span>
+        </button>
+        <div id="detailFields"></div>
+        <div class="detail-actions">
+            <button class="btn sec" id="btnEdit" onclick="enableEdit()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                <span data-i18n="edit">Изменить</span>
+            </button>
+            <button class="btn" id="btnSave" onclick="saveEdit()" style="display:none">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <span data-i18n="save">Сохранить</span>
+            </button>
+            <button class="btn danger" onclick="deleteItem()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                <span data-i18n="delete">Удалить</span>
+            </button>
+        </div>
+    </div>
+</aside>
+
 <header>
-    <h1>🔐 SafePass</h1>
-    <p style="color: var(--muted)">Локальное AES-256 шифрование в браузере</p>
+    <button class="burger" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    <h1>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        SafePass
+    </h1>
+    <button class="lock-btn" onclick="lockApp()" title="Заблокировать хранилище">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+    </button>
 </header>
 
 <main>
-    <!-- ЭКРАН ВХОДА -->
-    <div id="authScreen" class="card">
-        <h2 id="authTitle" style="margin-bottom:15px">Установите Мастер-пароль</h2>
-        <p id="authDesc" style="color:var(--muted); margin-bottom:20px; font-size:0.9em">Этот пароль используется для шифрования ключа. Без него данные не прочитать.</p>
-        <input type="password" id="masterPass" placeholder="Введите мастер-пароль...">
-        <input type="password" id="masterPassConfirm" placeholder="Повторите мастер-пароль..." class="hidden">
-        <button onclick="handleAuth()" id="authBtn">Создать хранилище</button>
-        <p id="authError" style="color:var(--danger); margin-top:10px; font-size:0.9em"></p>
+    <div id="authScreen" class="card auth-card">
+        <h2 style="margin-bottom:8px;" id="authTitle" data-i18n="createMaster">Придумайте мастер-пароль</h2>
+        <p style="color:var(--muted); margin-bottom:18px; font-size:.9em;" data-i18n="masterDesc">Ключ к хранилищу. Запомните его — восстановить нельзя.</p>
+        <input type="password" id="masterPass" placeholder="Введите пароль..." autocomplete="off" onkeydown="if(event.key==='Enter') handleAuth()">
+        <input type="password" id="masterConfirm" placeholder="Повторите пароль..." class="hidden" autocomplete="off" onkeydown="if(event.key==='Enter') handleAuth()">
+        <button class="btn" onclick="handleAuth()" id="authBtn" data-i18n="createVault">Создать хранилище</button>
+        <p class="err" id="authErr"></p>
     </div>
 
-    <!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
     <div id="appScreen" class="hidden">
-        <!-- ХРАНИЛИЩЕ -->
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-                <h2>Моё хранилище</h2>
-                <button class="secondary btn-small" onclick="logout()">🔒 Заблокировать</button>
-            </div>
-            
-            <input type="text" id="siteName" placeholder="Название сайта (например, VK)">
-            <input type="text" id="loginName" placeholder="Логин / Email">
-            <input type="text" id="passInput" placeholder="Пароль (сгенерируйте ниже или введите свой)">
-            
-            <button onclick="addToVault()">💾 Сохранить запись</button>
-            
-            <div style="display:flex; gap:10px; margin-top:10px">
-                <button class="secondary" onclick="exportVault()"> Экспорт</button>
-                <label class="btn secondary" style="cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">
-                     Импорт <input type="file" accept=".json" onchange="importVault(event)" style="display:none">
-                </label>
-            </div>
-            
-            <div id="vaultList" style="margin-top:20px"></div>
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('passwords', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+                <span data-i18n="passwords">Пароли</span>
+            </button>
+            <button class="tab" onclick="switchTab('contacts', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <span data-i18n="contacts">Контакты</span>
+            </button>
+            <button class="tab" onclick="switchTab('notes', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span data-i18n="notes">Заметки</span>
+            </button>
+            <button class="tab" onclick="switchTab('generator', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                <span data-i18n="generator">Генератор</span>
+            </button>
         </div>
 
-        <!-- ГЕНЕРАТОР -->
-        <div class="card">
-            <h2 style="margin-bottom:15px">Генератор паролей</h2>
-            <div id="genDisplay" style="background:#0f172a; border:1px solid #334155; border-radius:8px; padding:15px; font-family:monospace; font-size:1.4em; text-align:center; margin-bottom:15px; word-break:break-all; min-height: 54px; display: flex; align-items: center; justify-content: center;">Нажми "Сгенерировать"</div>
-            
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-                <label style="font-weight: 600;">Длина: <span id="lenVal" style="color:var(--primary)">16</span></label>
-                <input type="range" id="length" min="4" max="64" value="16" oninput="document.getElementById('lenVal').textContent=this.value" style="flex:1; margin:0 15px; accent-color:var(--primary); height: 6px;">
+        <div id="tabPasswords" class="tab-content card">
+            <h2 style="margin-bottom:16px;" data-i18n="newAccount">Новый аккаунт</h2>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <input type="text" id="pSite" placeholder="Сайт / Сервис" style="margin:0" onkeydown="if(event.key==='Enter') addPassword()">
+                <input type="text" id="pLogin" placeholder="Логин / Email" style="margin:0" onkeydown="if(event.key==='Enter') addPassword()">
             </div>
-            
-            <div class="checkbox-grid">
-                <label class="checkbox-label"><input type="checkbox" id="useUpper" checked> <span>A-Z</span></label>
-                <label class="checkbox-label"><input type="checkbox" id="useLower" checked> <span>a-z</span></label>
-                <label class="checkbox-label"><input type="checkbox" id="useNum" checked> <span>0-9</span></label>
-                <label class="checkbox-label"><input type="checkbox" id="useSym" checked> <span>!@#</span></label>
-                <label class="checkbox-label"><input type="checkbox" id="useRusUpper"> <span>А-Я</span></label>
-                <label class="checkbox-label"><input type="checkbox" id="useRusLower"> <span>а-я</span></label>
+            <input type="text" id="pPass" placeholder="Пароль (можно сгенерировать во вкладке Генератор)" style="margin-top:11px;" onkeydown="if(event.key==='Enter') addPassword()">
+            <p class="hint-enter" data-i18n="hintEnter">💡 Нажмите Enter для быстрого сохранения</p>
+            <button class="btn" onclick="addPassword()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <span data-i18n="savePassword">Сохранить пароль</span>
+            </button>
+        </div>
+
+        <div id="tabContacts" class="tab-content card hidden">
+            <h2 style="margin-bottom:16px;" data-i18n="newContact">Новый контакт</h2>
+            <input type="text" id="cName" placeholder="Имя / Название" onkeydown="if(event.key==='Enter') addContact()">
+            <input type="text" id="cPhone" placeholder="Телефон" onkeydown="if(event.key==='Enter') addContact()">
+            <input type="text" id="cEmail" placeholder="Email" onkeydown="if(event.key==='Enter') addContact()">
+            <input type="text" id="cExtra" placeholder="Доп. информация" onkeydown="if(event.key==='Enter') addContact()">
+            <p class="hint-enter" data-i18n="hintEnter">💡 Нажмите Enter для быстрого сохранения</p>
+            <button class="btn" onclick="addContact()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <span data-i18n="saveContact">Сохранить контакт</span>
+            </button>
+        </div>
+
+        <div id="tabNotes" class="tab-content card hidden">
+            <h2 style="margin-bottom:16px;" data-i18n="newNote">Новая заметка</h2>
+            <input type="text" id="nTitle" placeholder="Заголовок" onkeydown="if(event.key==='Enter') addNote()">
+            <textarea id="nText" placeholder="Текст заметки..."></textarea>
+            <p class="hint-enter" data-i18n="hintCtrlEnter">💡 Ctrl+Enter для быстрого сохранения</p>
+            <button class="btn" onclick="addNote()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                <span data-i18n="saveNote">Сохранить заметку</span>
+            </button>
+        </div>
+
+        <div id="tabGenerator" class="tab-content card hidden">
+            <h2 style="margin-bottom:18px;" data-i18n="passwordGenerator">Генератор паролей</h2>
+            <div class="gen-display" id="genDisplay" data-i18n="clickGenerate">Нажми "Сгенерировать"</div>
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+                <span style="font-weight:700; font-size:.9em;" data-i18n="length">Длина:</span>
+                <input type="range" id="genLen" min="4" max="64" value="16" oninput="document.getElementById('lenVal').textContent=this.value" style="flex:1; margin:0; accent-color:var(--accent);">
+                <span id="lenVal" style="font-weight:800; color:var(--accent); min-width:30px; font-size:1.1em;">16</span>
             </div>
-            
-            <button onclick="generate()">⚡ Сгенерировать</button>
-            <button class="secondary" onclick="copyGen()" style="margin-top:5px"> Копировать</button>
+            <div class="check-grid">
+                <label class="check-label"><input type="checkbox" id="gU" checked> A-Z</label>
+                <label class="check-label"><input type="checkbox" id="gL" checked> a-z</label>
+                <label class="check-label"><input type="checkbox" id="gN" checked> 0-9</label>
+                <label class="check-label"><input type="checkbox" id="gS" checked> !@#</label>
+                <label class="check-label"><input type="checkbox" id="gRU"> А-Я</label>
+                <label class="check-label"><input type="checkbox" id="gRL"> а-я</label>
+            </div>
+            <button class="btn accent" onclick="generate()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                <span data-i18n="generate">Сгенерировать</span>
+            </button>
+            <button class="btn sec" onclick="copyGen()" style="margin-top:8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span data-i18n="copyToClipboard">Копировать в буфер</span>
+            </button>
         </div>
     </div>
 </main>
 
-<footer>© 2026 | Надёжные пароли и кибербезопасность</footer>
+<footer>© 2026 | SafePass — Project</footer>
 
 <script>
-// === КРИПТОГРАФИЧЕСКОЕ ЯДРО ===
-let cryptoKey = null; 
+const translations = {
+    ru: {
+        menu: 'Меню', theme: 'Тема', savedRecords: 'Сохранено записей',
+        passwords: 'Пароли', contacts: 'Контакты', notes: 'Заметки', backup: 'Резервная копия',
+        export: 'Экспорт', import: 'Импорт', language: 'Язык', back: 'Назад',
+        edit: 'Изменить', save: 'Сохранить', delete: 'Удалить',
+        createMaster: 'Придумайте мастер-пароль', masterDesc: 'Ключ к хранилищу. Запомните его — восстановить нельзя.',
+        createVault: 'Создать хранилище', unlock: 'Разблокировать', enterMaster: 'Введите мастер-пароль',
+        newAccount: 'Новый аккаунт', newContact: 'Новый контакт', newNote: 'Новая заметка',
+        hintEnter: '💡 Нажмите Enter для быстрого сохранения', hintCtrlEnter: '💡 Ctrl+Enter для быстрого сохранения',
+        savePassword: 'Сохранить пароль', saveContact: 'Сохранить контакт', saveNote: 'Сохранить заметку',
+        passwordGenerator: 'Генератор паролей', clickGenerate: 'Нажми "Сгенерировать"', length: 'Длина:',
+        generate: 'Сгенерировать', copyToClipboard: 'Копировать в буфер',
+        generator: 'Генератор',
+        toastSaved: 'Успешно сохранено', toastCopied: 'Скопировано в буфер обмена',
+        toastDeleted: 'Запись удалена', toastLocked: 'Хранилище заблокировано',
+        toastExported: 'Резервная копия создана', toastEmpty: 'Хранилище пусто',
+        toastImported: 'Импортировано', toastError: 'Ошибка',
+        siteRequired: 'Заполните название сайта и пароль', nameRequired: 'Введите имя контакта',
+        titleRequired: 'Введите заголовок заметки', sitePassRequired: 'Название сайта и пароль обязательны',
+        nameRequiredEdit: 'Имя обязательно', titleRequiredEdit: 'Заголовок обязателен',
+        deleteConfirm: 'Удалить эту запись безвозвратно?',
+        wrongPassword: 'Неверный пароль', passwordsMismatch: 'Пароли не совпадают',
+        minChars: 'Минимум 4 символа', maxChars: 'Максимум 50 символов',
+        onlyLatin: 'Только латиница, цифры и _',
+        selectSymbols: 'Выберите хотя бы один тип символов',
+        wrongFormat: 'Некорректный формат файла', importError: 'Ошибка при импорте файла',
+        wrongPassOrFile: 'Неверный пароль или повреждённый файл',
+        saveError: 'Ошибка сохранения данных',
+        empty: 'Пусто',
+        site: 'Сайт', login: 'Логин', password: 'Пароль',
+        name: 'Имя', phone: 'Телефон', email: 'Email', extra: 'Доп.',
+        noteTitle: 'Заголовок', noteText: 'Текст',
+        placeholderSite: 'Сайт / Сервис', placeholderLogin: 'Логин / Email',
+        placeholderPass: 'Пароль (можно сгенерировать во вкладке Генератор)',
+        placeholderName: 'Имя / Название', placeholderPhone: 'Телефон',
+        placeholderEmail: 'Email', placeholderExtra: 'Доп. информация',
+        placeholderTitle: 'Заголовок', placeholderNote: 'Текст заметки...',
+        placeholderMaster: 'Введите пароль...', placeholderConfirm: 'Повторите пароль...',
+        noLogin: 'Без логина'
+    },
+    en: {
+        menu: 'Menu', theme: 'Theme', savedRecords: 'Saved records',
+        passwords: 'Passwords', contacts: 'Contacts', notes: 'Notes', backup: 'Backup',
+        export: 'Export', import: 'Import', language: 'Language', back: 'Back',
+        edit: 'Edit', save: 'Save', delete: 'Delete',
+        createMaster: 'Create master password', masterDesc: 'Key to the vault. Remember it — it cannot be recovered.',
+        createVault: 'Create vault', unlock: 'Unlock', enterMaster: 'Enter master password',
+        newAccount: 'New account', newContact: 'New contact', newNote: 'New note',
+        hintEnter: '💡 Press Enter to save quickly', hintCtrlEnter: '💡 Ctrl+Enter to save quickly',
+        savePassword: 'Save password', saveContact: 'Save contact', saveNote: 'Save note',
+        passwordGenerator: 'Password generator', clickGenerate: 'Click "Generate"', length: 'Length:',
+        generate: 'Generate', copyToClipboard: 'Copy to clipboard',
+        generator: 'Generator',
+        toastSaved: 'Successfully saved', toastCopied: 'Copied to clipboard',
+        toastDeleted: 'Record deleted', toastLocked: 'Vault locked',
+        toastExported: 'Backup created', toastEmpty: 'Vault is empty',
+        toastImported: 'Imported', toastError: 'Error',
+        siteRequired: 'Fill in site name and password', nameRequired: 'Enter contact name',
+        titleRequired: 'Enter note title', sitePassRequired: 'Site name and password are required',
+        nameRequiredEdit: 'Name is required', titleRequiredEdit: 'Title is required',
+        deleteConfirm: 'Delete this record permanently?',
+        wrongPassword: 'Wrong password', passwordsMismatch: 'Passwords do not match',
+        minChars: 'Minimum 4 characters', maxChars: 'Maximum 50 characters',
+        onlyLatin: 'Only Latin letters, digits and _',
+        selectSymbols: 'Select at least one character type',
+        wrongFormat: 'Invalid file format', importError: 'Import error',
+        wrongPassOrFile: 'Wrong password or corrupted file',
+        saveError: 'Save error',
+        empty: 'Empty',
+        site: 'Site', login: 'Login', password: 'Password',
+        name: 'Name', phone: 'Phone', email: 'Email', extra: 'Extra',
+        noteTitle: 'Title', noteText: 'Text',
+        placeholderSite: 'Site / Service', placeholderLogin: 'Login / Email',
+        placeholderPass: 'Password (can be generated in Generator tab)',
+        placeholderName: 'Name / Label', placeholderPhone: 'Phone',
+        placeholderEmail: 'Email', placeholderExtra: 'Additional info',
+        placeholderTitle: 'Title', placeholderNote: 'Note text...',
+        placeholderMaster: 'Enter password...', placeholderConfirm: 'Repeat password...',
+        noLogin: 'No login'
+    }
+};
 
-async function deriveKey(password) {
+let currentLang = 'ru';
+
+function t(key) {
+    return translations[currentLang][key] || translations.ru[key] || key;
+}
+
+function setLang(lang, el) {
+    currentLang = lang;
+    localStorage.setItem('sp_lang', lang);
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    if (el) el.classList.add('active');
+    applyTranslations();
+}
+
+function applyTranslations() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[currentLang][key]) {
+            el.textContent = translations[currentLang][key];
+        }
+    });
+    document.getElementById('masterPass').placeholder = t('placeholderMaster');
+    document.getElementById('masterConfirm').placeholder = t('placeholderConfirm');
+    document.getElementById('pSite').placeholder = t('placeholderSite');
+    document.getElementById('pLogin').placeholder = t('placeholderLogin');
+    document.getElementById('pPass').placeholder = t('placeholderPass');
+    document.getElementById('cName').placeholder = t('placeholderName');
+    document.getElementById('cPhone').placeholder = t('placeholderPhone');
+    document.getElementById('cEmail').placeholder = t('placeholderEmail');
+    document.getElementById('cExtra').placeholder = t('placeholderExtra');
+    document.getElementById('nTitle').placeholder = t('placeholderTitle');
+    document.getElementById('nText').placeholder = t('placeholderNote');
+    renderAll();
+}
+
+(function(){
+    const saved = localStorage.getItem('sp_lang') || 'ru';
+    currentLang = saved;
+    setTimeout(() => {
+        const btns = document.querySelectorAll('.lang-btn');
+        if (saved === 'en') btns[1]?.classList.add('active');
+        else btns[0]?.classList.add('active');
+        applyTranslations();
+    }, 0);
+})();
+
+let curId = null, curCat = null, editing = false;
+let cryptoKey = null;
+let data = { passwords: [], contacts: [], notes: [] };
+
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    let icon = '';
+    if (type === 'success') {
+        icon = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+    } else if (type === 'error') {
+        icon = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+    } else {
+        icon = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+    }
+
+    toast.innerHTML = `${icon}<span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 3000);
+}
+
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('active');
+    document.getElementById('overlay').classList.toggle('active');
+    if (document.getElementById('sidebar').classList.contains('active')) renderAll();
+    else setTimeout(showMenu, 50);
+}
+function showMenu() {
+    document.getElementById('menuContent').classList.remove('hidden');
+    document.getElementById('detailView').classList.add('hidden');
+    curId = null; curCat = null; editing = false;
+}
+function toggleAcc(id) {
+    const h = document.querySelector(`#${id}`).previousElementSibling;
+    h.classList.toggle('open');
+    document.getElementById(id).classList.toggle('open');
+}
+
+function setTheme(t, el) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('sp_theme', t);
+    document.querySelectorAll('.theme-circle').forEach(b => b.classList.remove('active'));
+    if (el) el.classList.add('active');
+}
+(function(){
+    const s = localStorage.getItem('sp_theme') || 'default';
+    document.documentElement.setAttribute('data-theme', s);
+    setTimeout(() => {
+        const circle = document.querySelector(`.theme-circle[data-theme="${s}"]`);
+        if (circle) circle.classList.add('active');
+    }, 0);
+})();
+
+function switchTab(t, el) {
+    document.querySelectorAll('.tab-content').forEach(x => x.classList.add('hidden'));
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    const m = {passwords:'tabPasswords', contacts:'tabContacts', notes:'tabNotes', generator:'tabGenerator'};
+    document.getElementById(m[t]).classList.remove('hidden');
+    el.classList.add('active');
+}
+
+async function deriveKey(p) {
     const enc = new TextEncoder();
-    const keyMaterial = await window.crypto.subtle.importKey("raw", enc.encode(password), {name: "PBKDF2"}, false, ["deriveKey"]);
-    return window.crypto.subtle.deriveKey(
-        { name: "PBKDF2", salt: enc.encode("safePassSalt_v1"), iterations: 100000, hash: "SHA-256" },
-        keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
+    const km = await crypto.subtle.importKey('raw', enc.encode(p), {name:'PBKDF2'}, false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+        {name:'PBKDF2', salt: enc.encode('sp_salt_v1'), iterations: 100000, hash:'SHA-256'},
+        km, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']
     );
 }
-
-async function encryptData(data) {
-    const iv = window.crypto.getRandomValues(new Uint8Array(12));
-    const encrypted = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv }, cryptoKey, new TextEncoder().encode(JSON.stringify(data)));
-    return { iv: Array.from(iv), data: Array.from(new Uint8Array(encrypted)) };
+async function encData(d) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const e = await crypto.subtle.encrypt({name:'AES-GCM', iv}, cryptoKey, new TextEncoder().encode(JSON.stringify(d)));
+    return {iv: Array.from(iv), data: Array.from(new Uint8Array(e))};
 }
-
-async function decryptData(encryptedObj) {
+async function decData(o) {
     try {
-        const decrypted = await window.crypto.subtle.decrypt(
-            { name: "AES-GCM", iv: new Uint8Array(encryptedObj.iv) }, 
-            cryptoKey, 
-            new Uint8Array(encryptedObj.data)
-        );
-        return JSON.parse(new TextDecoder().decode(decrypted));
+        const d = await crypto.subtle.decrypt({name:'AES-GCM', iv: new Uint8Array(o.iv)}, cryptoKey, new Uint8Array(o.data));
+        return JSON.parse(new TextDecoder().decode(d));
     } catch(e) { return null; }
 }
 
-// === АВТОРИЗАЦИЯ ===
 async function handleAuth() {
-    const pass = document.getElementById('masterPass').value;
-    const confirm = document.getElementById('masterPassConfirm').value;
-    const errEl = document.getElementById('authError');
-    errEl.textContent = '';
-    
-    if(pass.length < 6) { errEl.textContent = 'Минимум 6 символов'; return; }
-    
-    const hasVault = localStorage.getItem('safePassEncrypted') !== null;
-    
-    if(!hasVault) {
-        if(pass !== confirm) { errEl.textContent = 'Пароли не совпадают'; return; }
-        cryptoKey = await deriveKey(pass);
-        await saveEncrypted([]);
+    const p = document.getElementById('masterPass').value;
+    const c = document.getElementById('masterConfirm').value;
+    const e = document.getElementById('authErr');
+    e.textContent = '';
+    if (p.length < 4) { e.textContent = '❌ ' + t('minChars'); return; }
+    if (p.length > 50) { e.textContent = '❌ ' + t('maxChars'); return; }
+    if (!/^[A-Za-z0-9_]+$/.test(p)) { e.textContent = ' ' + t('onlyLatin'); return; }
+
+    const has = localStorage.getItem('sp_vault') !== null;
+    if (!has) {
+        if (p !== c) { e.textContent = '❌ ' + t('passwordsMismatch'); return; }
+        cryptoKey = await deriveKey(p);
+        await save(data);
         showApp();
     } else {
-        cryptoKey = await deriveKey(pass);
-        const test = await loadEncrypted();
-        if(test === null) {
-            errEl.textContent = 'Неверный мастер-пароль!';
-            cryptoKey = null;
-            return;
-        }
+        cryptoKey = await deriveKey(p);
+        const t2 = await load();
+        if (t2 === null) { e.textContent = '❌ ' + t('wrongPassword'); cryptoKey = null; return; }
         showApp();
     }
 }
 
-async function saveEncrypted(data) {
-    const encrypted = await encryptData(data);
-    localStorage.setItem('safePassEncrypted', JSON.stringify(encrypted));
+async function save(d) {
+    try {
+        const e = await encData(d);
+        localStorage.setItem('sp_vault', JSON.stringify(e));
+        data = d;
+        renderAll();
+        updateStats();
+    } catch(err) {
+        console.error(err);
+        showToast(t('saveError'), 'error');
+    }
 }
-
-async function loadEncrypted() {
-    const raw = localStorage.getItem('safePassEncrypted');
-    if(!raw) return [];
-    return await decryptData(JSON.parse(raw));
+async function load() {
+    const r = localStorage.getItem('sp_vault');
+    if (!r) return null;
+    const d = await decData(JSON.parse(r));
+    if (d) data = d;
+    return d;
 }
 
 function showApp() {
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('appScreen').classList.remove('hidden');
-    renderVault();
     generate();
+    updateStats();
+}
+
+function lockApp() {
+    if (!cryptoKey) return;
+    cryptoKey = null;
+    data = {passwords:[], contacts:[], notes:[]};
+    document.getElementById('appScreen').classList.add('hidden');
+    document.getElementById('authScreen').classList.remove('hidden');
+    document.getElementById('masterPass').value = '';
+    document.getElementById('masterConfirm').value = '';
+    document.getElementById('authErr').textContent = '';
+    document.getElementById('authTitle').textContent = t('enterMaster');
+    document.getElementById('masterConfirm').classList.add('hidden');
+    document.getElementById('authBtn').textContent = t('unlock');
+    document.getElementById('sidebar').classList.remove('active');
+    document.getElementById('overlay').classList.remove('active');
+    showToast(t('toastLocked'), 'info');
 }
 
 function logout() {
     cryptoKey = null;
+    data = {passwords:[], contacts:[], notes:[]};
     document.getElementById('appScreen').classList.add('hidden');
     document.getElementById('authScreen').classList.remove('hidden');
     document.getElementById('masterPass').value = '';
-    document.getElementById('masterPassConfirm').value = '';
-    document.getElementById('authError').textContent = '';
-    
-    const hasVault = localStorage.getItem('safePassEncrypted') !== null;
-    document.getElementById('authTitle').textContent = hasVault ? 'Введите Мастер-пароль' : 'Установите Мастер-пароль';
-    document.getElementById('authDesc').textContent = hasVault 
-        ? 'Введите пароль для расшифровки хранилища.' 
-        : 'Этот пароль будет использоваться для шифрования всех ваших данных.';
-    document.getElementById('masterPassConfirm').classList.toggle('hidden', hasVault);
-    document.getElementById('authBtn').textContent = hasVault ? 'Разблокировать' : 'Создать хранилище';
+    document.getElementById('masterConfirm').value = '';
+    document.getElementById('authErr').textContent = '';
+    const has = localStorage.getItem('sp_vault') !== null;
+    document.getElementById('authTitle').textContent = has ? t('enterMaster') : t('createMaster');
+    document.getElementById('masterConfirm').classList.toggle('hidden', has);
+    document.getElementById('authBtn').textContent = has ? t('unlock') : t('createVault');
 }
 
-(function initAuth() {
-    const hasVault = localStorage.getItem('safePassEncrypted') !== null;
-    document.getElementById('authTitle').textContent = hasVault ? 'Введите Мастер-пароль' : 'Установите Мастер-пароль';
-    document.getElementById('masterPassConfirm').classList.toggle('hidden', hasVault);
-    document.getElementById('authBtn').textContent = hasVault ? 'Разблокировать' : 'Создать хранилище';
+(function(){
+    const has = localStorage.getItem('sp_vault') !== null;
+    document.getElementById('authTitle').textContent = has ? t('enterMaster') : t('createMaster');
+    document.getElementById('masterConfirm').classList.toggle('hidden', has);
+    document.getElementById('authBtn').textContent = has ? t('unlock') : t('createVault');
 })();
 
-// === УПРАВЛЕНИЕ ХРАНИЛИЩЕМ ===
-async function addToVault() {
-    const site = document.getElementById('siteName').value.trim();
-    const login = document.getElementById('loginName').value.trim();
-    const pass = document.getElementById('passInput').value.trim();
-    if(!site || !pass) { alert('Заполните название сайта и пароль!'); return; }
-    
-    const vault = await loadEncrypted();
-    vault.push({ id: Date.now(), site, login, pass });
-    await saveEncrypted(vault);
-    
-    document.getElementById('siteName').value = '';
-    document.getElementById('loginName').value = '';
-    document.getElementById('passInput').value = '';
-    renderVault();
+async function updateStats() {
+    const d = await load() || data;
+    const total = (d.passwords?.length||0) + (d.contacts?.length||0) + (d.notes?.length||0);
+    document.getElementById('statCount').textContent = total;
 }
 
-async function deleteFromVault(id) {
-    if(!confirm('Удалить эту запись?')) return;
-    const vault = (await loadEncrypted()).filter(i => i.id !== id);
-    await saveEncrypted(vault);
-    renderVault();
+function renderAll() {
+    renderList('accP', data.passwords, 'passwords', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>', i => `${i.site}<span class="list-sub">${i.login||''}</span>`);
+    renderList('accC', data.contacts, 'contacts', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>', i => `${i.name}<span class="list-sub">${i.phone||i.email||''}</span>`);
+    renderList('accN', data.notes, 'notes', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>', i => `${i.title}<span class="list-sub">${(i.text||'').substring(0,30)}...</span>`);
 }
-
-async function copyFromVault(pass) {
-    navigator.clipboard.writeText(pass);
-    alert('Скопировано!');
-}
-
-async function renderVault() {
-    const list = document.getElementById('vaultList');
-    const vault = await loadEncrypted();
-    if(vault.length === 0) { list.innerHTML = '<div style="text-align:center; padding:30px; color:var(--muted)">Хранилище пусто</div>'; return; }
-    
-    list.innerHTML = vault.map(item => `
-        <div class="vault-item">
-            <div class="vault-info"><div>${item.site}</div><div>${item.login || 'Без логина'}</div></div>
-            <div>
-                <button class="secondary btn-small" onclick="copyFromVault('${item.pass}')"></button>
-                <button class="danger btn-small" onclick="deleteFromVault(${item.id})">🗑️</button>
-            </div>
+function renderList(id, arr, cat, icon, textFn) {
+    const el = document.getElementById(id);
+    if (!arr || arr.length === 0) {
+        el.innerHTML = `<div style="padding:10px; color:var(--muted); font-size:.85em; text-align:center;">${t('empty')}</div>`;
+        return;
+    }
+    el.innerHTML = arr.map(i => `
+        <div class="list-item" onclick="openDetail('${cat}', ${i.id})">
+            <div class="list-icon">${icon}</div>
+            <div class="list-text">${textFn(i)}</div>
         </div>
     `).join('');
 }
 
+function openDetail(cat, id) {
+    curId = id; curCat = cat; editing = false;
+    const item = data[cat].find(i => i.id === id);
+    if (!item) return;
+    const c = document.getElementById('detailFields');
+    c.innerHTML = '';
+
+    if (cat === 'passwords') {
+        c.innerHTML = `
+            <div class="field"><div class="field-label">${t('site')}</div><div class="field-row"><input type="text" class="field-input" id="dSite" readonly value="${esc(item.site)}"><button class="btn sec icon" onclick="copyF('dSite')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
+            <div class="field"><div class="field-label">${t('login')}</div><div class="field-row"><input type="text" class="field-input" id="dLogin" readonly value="${esc(item.login||'')}"><button class="btn sec icon" onclick="copyF('dLogin')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
+            <div class="field"><div class="field-label">${t('password')}</div><div class="field-row"><input type="password" class="field-input" id="dPass" readonly value="${esc(item.pass)}"><button class="btn sec icon" id="btnEye" onclick="toggleEye()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button><button class="btn sec icon" onclick="copyF('dPass')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
+        `;
+    } else if (cat === 'contacts') {
+        c.innerHTML = `
+            <div class="field"><div class="field-label">${t('name')}</div><div class="field-row"><input type="text" class="field-input" id="dName" readonly value="${esc(item.name)}"><button class="btn sec icon" onclick="copyF('dName')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
+            <div class="field"><div class="field-label">${t('phone')}</div><div class="field-row"><input type="text" class="field-input" id="dPhone" readonly value="${esc(item.phone||'')}"><button class="btn sec icon" onclick="copyF('dPhone')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
+            <div class="field"><div class="field-label">${t('email')}</div><div class="field-row"><input type="text" class="field-input" id="dEmail" readonly value="${esc(item.email||'')}"><button class="btn sec icon" onclick="copyF('dEmail')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
+            <div class="field"><div class="field-label">${t('extra')}</div><div class="field-row"><input type="text" class="field-input" id="dExtra" readonly value="${esc(item.extra||'')}"><button class="btn sec icon" onclick="copyF('dExtra')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
+        `;
+    } else {
+        c.innerHTML = `
+            <div class="field"><div class="field-label">${t('noteTitle')}</div><div class="field-row"><input type="text" class="field-input" id="dTitle" readonly value="${esc(item.title)}"><button class="btn sec icon" onclick="copyF('dTitle')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
+            <div class="field"><div class="field-label">${t('noteText')}</div><textarea class="field-input" id="dText" readonly style="min-height:140px;">${esc(item.text||'')}</textarea></div>
+        `;
+    }
+    updBtns(false);
+    document.getElementById('menuContent').classList.add('hidden');
+    document.getElementById('detailView').classList.remove('hidden');
+}
+
+function esc(s) { return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+function toggleEye() {
+    const i = document.getElementById('dPass'), b = document.getElementById('btnEye');
+    if (i.type === 'password') { 
+        i.type = 'text'; 
+        b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'; 
+    } else { 
+        i.type = 'password'; 
+        b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'; 
+    }
+}
+function copyF(id) {
+    navigator.clipboard.writeText(document.getElementById(id).value);
+    const el = document.getElementById(id);
+    const o = el.style.background;
+    el.style.background = 'rgba(16,185,129,0.25)';
+    setTimeout(() => el.style.background = o, 300);
+    showToast(t('toastCopied'), 'success');
+}
+function enableEdit() {
+    editing = true;
+    document.querySelectorAll('#detailFields .field-input').forEach(i => i.removeAttribute('readonly'));
+    updBtns(true);
+}
+function updBtns(e) {
+    document.getElementById('btnEdit').style.display = e ? 'none' : 'flex';
+    document.getElementById('btnSave').style.display = e ? 'flex' : 'none';
+}
+async function saveEdit() {
+    const idx = data[curCat].findIndex(a => a.id === curId);
+    if (idx === -1) return;
+    if (curCat === 'passwords') {
+        const s = document.getElementById('dSite').value.trim(), l = document.getElementById('dLogin').value.trim(), p = document.getElementById('dPass').value.trim();
+        if (!s || !p) { showToast(t('sitePassRequired'), 'error'); return; }
+        data.passwords[idx] = {...data.passwords[idx], site:s, login:l, pass:p};
+    } else if (curCat === 'contacts') {
+        const n = document.getElementById('dName').value.trim();
+        if (!n) { showToast(t('nameRequiredEdit'), 'error'); return; }
+        data.contacts[idx] = {...data.contacts[idx], name:n, phone:document.getElementById('dPhone').value.trim(), email:document.getElementById('dEmail').value.trim(), extra:document.getElementById('dExtra').value.trim()};
+    } else {
+        const tt = document.getElementById('dTitle').value.trim();
+        if (!tt) { showToast(t('titleRequiredEdit'), 'error'); return; }
+        data.notes[idx] = {...data.notes[idx], title:tt, text:document.getElementById('dText').value.trim()};
+    }
+    await save(data);
+    editing = false;
+    document.querySelectorAll('#detailFields .field-input').forEach(i => i.setAttribute('readonly', true));
+    updBtns(false);
+    showToast(t('toastSaved'), 'success');
+}
+async function deleteItem() {
+    if (!confirm(t('deleteConfirm'))) return;
+    data[curCat] = data[curCat].filter(a => a.id !== curId);
+    await save(data);
+    showMenu();
+    showToast(t('toastDeleted'), 'info');
+}
+
+async function addPassword() {
+    const s = document.getElementById('pSite').value.trim(), l = document.getElementById('pLogin').value.trim(), p = document.getElementById('pPass').value.trim();
+    if (!s || !p) { showToast(t('siteRequired'), 'error'); return; }
+    data.passwords.push({id: Date.now(), site:s, login:l, pass:p});
+    await save(data);
+    document.getElementById('pSite').value=''; document.getElementById('pLogin').value=''; document.getElementById('pPass').value='';
+    showToast(t('toastSaved'), 'success');
+}
+async function addContact() {
+    const n = document.getElementById('cName').value.trim();
+    if (!n) { showToast(t('nameRequired'), 'error'); return; }
+    data.contacts.push({id: Date.now(), name:n, phone:document.getElementById('cPhone').value.trim(), email:document.getElementById('cEmail').value.trim(), extra:document.getElementById('cExtra').value.trim()});
+    await save(data);
+    ['cName','cPhone','cEmail','cExtra'].forEach(i => document.getElementById(i).value='');
+    showToast(t('toastSaved'), 'success');
+}
+async function addNote() {
+    const tt = document.getElementById('nTitle').value.trim();
+    if (!tt) { showToast(t('titleRequired'), 'error'); return; }
+    data.notes.push({id: Date.now(), title:tt, text:document.getElementById('nText').value.trim()});
+    await save(data);
+    document.getElementById('nTitle').value=''; document.getElementById('nText').value='';
+    showToast(t('toastSaved'), 'success');
+}
+
 async function exportVault() {
-    const raw = localStorage.getItem('safePassEncrypted');
-    if(!raw) { alert('Хранилище пусто!'); return; }
-    const blob = new Blob([raw], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'safepass_encrypted_backup.json'; a.click();
-    URL.revokeObjectURL(url);
+    const r = localStorage.getItem('sp_vault');
+    if (!r) { showToast(t('toastEmpty'), 'error'); return; }
+    const b = new Blob([r], {type:'application/json'});
+    const u = URL.createObjectURL(b);
+    const a = document.createElement('a'); a.href = u; a.download = 'safepass_backup.json'; a.click();
+    URL.revokeObjectURL(u);
+    showToast(t('toastExported'), 'success');
 }
-
-async function importVault(event) {
-    const file = event.target.files[0]; if(!file) return;
-    const reader = new FileReader();
-    reader.onload = async function(e) {
+async function importVault(ev) {
+    const f = ev.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = async e => {
         try {
-            const imported = JSON.parse(e.target.result);
-            if(imported.iv && imported.data) {
-                const test = await decryptData(imported);
-                if(test !== null) {
-                    const current = await loadEncrypted();
-                    const merged = [...current, ...test.filter(i => !current.some(c => c.id === i.id))];
-                    await saveEncrypted(merged);
-                    alert(`Импортировано ${test.length} записей!`);
-                    renderVault();
-                } else {
-                    alert('Не удалось расшифровать файл! Возможно, он создан с другим мастер-паролем.');
-                }
-            } else { alert('Некорректный формат файла!'); }
-        } catch(err) { alert('Ошибка импорта!'); }
+            const imp = JSON.parse(e.target.result);
+            if (imp.iv && imp.data) {
+                const tt = await decData(imp);
+                if (tt && tt.passwords && tt.contacts && tt.notes) {
+                    const m = {
+                        passwords: [...data.passwords, ...tt.passwords.filter(i => !data.passwords.some(c => c.id===i.id))],
+                        contacts: [...data.contacts, ...tt.contacts.filter(i => !data.contacts.some(c => c.id===i.id))],
+                        notes: [...data.notes, ...tt.notes.filter(i => !data.notes.some(c => c.id===i.id))]
+                    };
+                    await save(m);
+                    showToast(`${t('toastImported')}: ${tt.passwords.length} ${t('passwords').toLowerCase()}, ${tt.contacts.length} ${t('contacts').toLowerCase()}, ${tt.notes.length} ${t('notes').toLowerCase()}`, 'success');
+                } else showToast(t('wrongPassOrFile'), 'error');
+            } else showToast(t('wrongFormat'), 'error');
+        } catch(err) { showToast(t('importError'), 'error'); }
     };
-    reader.readAsText(file);
+    r.readAsText(f);
 }
 
-// === ГЕНЕРАТОР ПАРОЛЕЙ ===
-const chars = { 
-    upper:'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 
-    lower:'abcdefghijklmnopqrstuvwxyz', 
-    num:'0123456789', 
-    sym:'!@#$%^&*()_+-=[]{}|;:,.<>?/~',
-    rusUpper:'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ',
-    rusLower:'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
-};
-
+const CH = {U:'ABCDEFGHIJKLMNOPQRSTUVWXYZ', L:'abcdefghijklmnopqrstuvwxyz', N:'0123456789', S:'!@#$%^&*()_+-=[]{}|;:,.<>?/~', RU:'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ', RL:'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'};
 function generate() {
-    let pool = '';
-    if(document.getElementById('useUpper').checked) pool += chars.upper;
-    if(document.getElementById('useLower').checked) pool += chars.lower;
-    if(document.getElementById('useNum').checked) pool += chars.num;
-    if(document.getElementById('useSym').checked) pool += chars.sym;
-    if(document.getElementById('useRusUpper').checked) pool += chars.rusUpper;
-    if(document.getElementById('useRusLower').checked) pool += chars.rusLower;
-    
-    if(!pool) { alert('Выберите хотя бы один тип символов!'); return; }
-    
-    const len = parseInt(document.getElementById('length').value);
-    const arr = new Uint32Array(len); 
-    crypto.getRandomValues(arr);
-    
-    let pass = ''; 
-    for(let i=0; i<len; i++) pass += pool[arr[i] % pool.length];
-    
-    document.getElementById('genDisplay').textContent = pass;
-    document.getElementById('passInput').value = pass;
+    let p = '';
+    if (document.getElementById('gU').checked) p += CH.U;
+    if (document.getElementById('gL').checked) p += CH.L;
+    if (document.getElementById('gN').checked) p += CH.N;
+    if (document.getElementById('gS').checked) p += CH.S;
+    if (document.getElementById('gRU').checked) p += CH.RU;
+    if (document.getElementById('gRL').checked) p += CH.RL;
+    if (!p) { showToast(t('selectSymbols'), 'error'); return; }
+    const l = parseInt(document.getElementById('genLen').value);
+    const a = new Uint32Array(l); crypto.getRandomValues(a);
+    let r = ''; for (let i=0; i<l; i++) r += p[a[i] % p.length];
+    document.getElementById('genDisplay').textContent = r;
 }
-
 function copyGen() {
     const p = document.getElementById('genDisplay').textContent;
-    if(p !== 'Нажми "Сгенерировать"') { navigator.clipboard.writeText(p); alert('Скопировано!'); }
+    if (p && p !== t('clickGenerate')) { 
+        navigator.clipboard.writeText(p); 
+        showToast(t('toastCopied'), 'success'); 
+    }
 }
+
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'Enter') {
+        const notesTab = document.getElementById('tabNotes');
+        if (!notesTab.classList.contains('hidden')) {
+            addNote();
+        }
+    }
+});
 </script>
 </body>
 </html>
