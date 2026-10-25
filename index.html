@@ -8,18 +8,18 @@
 :root {
     --bg: #0f172a; --card: rgba(30, 41, 59, 0.85); --text: #f1f5f9; --muted: #94a3b8;
     --primary: #3b82f6; --accent: #10b981; --danger: #ef4444; --warn: #f59e0b;
-    --border: rgba(255,255,255,0.08); --glass: blur(14px);
+    --gold: #fbbf24; --border: rgba(255,255,255,0.08); --glass: blur(14px);
     --shadow: 0 10px 40px rgba(0,0,0,0.4); --radius: 16px;
 }
 [data-theme="light"] {
     --bg: #f8fafc; --card: rgba(255,255,255,0.95); --text: #0f172a; --muted: #64748b;
     --primary: #2563eb; --accent: #059669; --danger: #dc2626; --warn: #d97706;
-    --border: rgba(0,0,0,0.08); --shadow: 0 10px 40px rgba(0,0,0,0.08);
+    --gold: #d97706; --border: rgba(0,0,0,0.08); --shadow: 0 10px 40px rgba(0,0,0,0.08);
 }
 [data-theme="dark"] {
     --bg: #020617; --card: rgba(15, 23, 42, 0.95); --text: #e2e8f0; --muted: #64748b;
     --primary: #60a5fa; --accent: #34d399; --danger: #f87171; --warn: #fbbf24;
-    --border: rgba(255,255,255,0.05); --shadow: 0 10px 40px rgba(0,0,0,0.6);
+    --gold: #fbbf24; --border: rgba(255,255,255,0.05); --shadow: 0 10px 40px rgba(0,0,0,0.6);
 }
 
 * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',system-ui,sans-serif; transition: background .25s, color .25s, border-color .25s; }
@@ -27,6 +27,21 @@
 body { 
     background: var(--bg); color: var(--text); min-height:100vh; display:flex; flex-direction:column; overflow-x:hidden; position: relative;
 }
+body::before {
+    content: ''; position: fixed; inset: 0;
+    background: radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+    animation: bgShift 20s ease-in-out infinite; z-index: -2;
+}
+body::after {
+    content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle at 30% 40%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 70% 60%, rgba(16, 185, 129, 0.08) 0%, transparent 40%);
+    animation: bgRotate 30s linear infinite; z-index: -1;
+}
+@keyframes bgShift { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(30px, -30px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } }
+@keyframes bgRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 header {
     padding: 14px 20px; backdrop-filter: var(--glass); position:sticky; top:0; z-index:100;
@@ -115,10 +130,24 @@ h1 svg { width: 28px; height: 28px; flex-shrink: 0; }
     display:flex; align-items:center; gap:10px;
 }
 .list-item:hover { border-color: var(--primary); background: rgba(59,130,246,0.1); }
+.list-item.favorite {
+    border-left: 3px solid var(--gold);
+    background: rgba(251, 191, 36, 0.05);
+}
 .list-icon { width:28px; height:28px; border-radius:6px; background: var(--primary); color:white; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .list-icon svg { width: 16px; height: 16px; }
-.list-text { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.list-text { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width: 0; }
 .list-sub { font-size:.75em; color: var(--muted); display:block; margin-top:2px; }
+
+.fav-btn {
+    background: none; border: none; cursor: pointer; padding: 4px;
+    color: var(--muted); transition: .2s; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+}
+.fav-btn svg { width: 18px; height: 18px; }
+.fav-btn:hover { color: var(--gold); transform: scale(1.2); }
+.fav-btn.active { color: var(--gold); }
+.fav-btn.active svg { fill: var(--gold); }
 
 .backup-section { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--border); }
 .backup-row { display:flex; gap:10px; }
@@ -192,6 +221,17 @@ textarea { resize:vertical; min-height:100px; }
 .err { color: var(--danger); margin-top:10px; font-size:.9em; min-height:20px; font-weight:600; }
 .hint-enter { font-size: .78em; color: var(--muted); margin-top: -6px; margin-bottom: 10px; font-style: italic; }
 
+.lockout-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border-radius: var(--radius); z-index: 10;
+}
+.lockout-timer {
+    font-size: 2em; font-weight: 800; color: var(--danger); margin: 10px 0;
+    font-family: 'Courier New', monospace;
+}
+.lockout-msg { color: var(--muted); font-size: 0.9em; text-align: center; max-width: 80%; }
+
 .detail-view { display:flex; flex-direction:column; gap:13px; animation: fadeIn .3s; }
 @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 .field { display:flex; flex-direction:column; gap:5px; }
@@ -262,6 +302,17 @@ footer { text-align:center; padding:24px; color: var(--muted); font-size:.82em; 
                 <span class="stat-lbl" data-i18n="savedRecords">Сохранено записей</span>
                 <span class="stat-val" id="statCount">0</span>
             </div>
+        </div>
+
+        <div class="accordion">
+            <div class="acc-header" onclick="toggleAcc('accFav')">
+                <span style="display:flex;align-items:center;gap:8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <span data-i18n="favorites">Избранное</span>
+                </span>
+                <span class="acc-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+            </div>
+            <div class="acc-content" id="accFav"></div>
         </div>
 
         <div class="accordion">
@@ -359,7 +410,14 @@ footer { text-align:center; padding:24px; color: var(--muted); font-size:.82em; 
 </header>
 
 <main>
-    <div id="authScreen" class="card auth-card">
+    <div id="authScreen" class="card auth-card" style="position:relative;">
+        <div id="lockoutOverlay" class="lockout-overlay hidden">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:48px;height:48px;margin-bottom:10px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path><line x1="12" y1="16" x2="12" y2="16.01"></line></svg>
+            <div class="lockout-msg" data-i18n="lockedMsg">Слишком много попыток. Подождите:</div>
+            <div class="lockout-timer" id="lockoutTimer">60</div>
+            <div class="lockout-msg" data-i18n="lockedSub">секунд</div>
+        </div>
+
         <h2 style="margin-bottom:8px;" id="authTitle" data-i18n="createMaster">Придумайте мастер-пароль</h2>
         <p style="color:var(--muted); margin-bottom:18px; font-size:.9em;" data-i18n="masterDesc">Ключ к хранилищу. Запомните его — восстановить нельзя.</p>
         <input type="password" id="masterPass" placeholder="Введите пароль..." autocomplete="off" onkeydown="if(event.key==='Enter') handleAuth()">
@@ -460,8 +518,8 @@ footer { text-align:center; padding:24px; color: var(--muted); font-size:.82em; 
 const translations = {
     ru: {
         menu: 'Меню', theme: 'Тема', savedRecords: 'Сохранено записей',
-        passwords: 'Пароли', contacts: 'Контакты', notes: 'Заметки', backup: 'Резервная копия',
-        export: 'Экспорт', import: 'Импорт', language: 'Язык', back: 'Назад',
+        passwords: 'Пароли', contacts: 'Контакты', notes: 'Заметки', favorites: 'Избранное',
+        backup: 'Резервная копия', export: 'Экспорт', import: 'Импорт', language: 'Язык', back: 'Назад',
         edit: 'Изменить', save: 'Сохранить', delete: 'Удалить',
         createMaster: 'Придумайте мастер-пароль', masterDesc: 'Ключ к хранилищу. Запомните его — восстановить нельзя.',
         createVault: 'Создать хранилище', unlock: 'Разблокировать', enterMaster: 'Введите мастер-пароль',
@@ -475,6 +533,7 @@ const translations = {
         toastDeleted: 'Запись удалена', toastLocked: 'Хранилище заблокировано',
         toastExported: 'Резервная копия создана', toastEmpty: 'Хранилище пусто',
         toastImported: 'Импортировано', toastError: 'Ошибка',
+        toastFavAdded: 'Добавлено в избранное', toastFavRemoved: 'Убрано из избранного',
         siteRequired: 'Заполните название сайта и пароль', nameRequired: 'Введите имя контакта',
         titleRequired: 'Введите заголовок заметки', sitePassRequired: 'Название сайта и пароль обязательны',
         nameRequiredEdit: 'Имя обязательно', titleRequiredEdit: 'Заголовок обязателен',
@@ -486,7 +545,8 @@ const translations = {
         wrongFormat: 'Некорректный формат файла', importError: 'Ошибка при импорте файла',
         wrongPassOrFile: 'Неверный пароль или повреждённый файл',
         saveError: 'Ошибка сохранения данных',
-        empty: 'Пусто',
+        empty: 'Пусто', noFavorites: 'Нет избранных записей',
+        lockedMsg: 'Слишком много попыток. Подождите:', lockedSub: 'секунд',
         site: 'Сайт', login: 'Логин', password: 'Пароль',
         name: 'Имя', phone: 'Телефон', email: 'Email', extra: 'Доп.',
         noteTitle: 'Заголовок', noteText: 'Текст',
@@ -496,12 +556,13 @@ const translations = {
         placeholderEmail: 'Email', placeholderExtra: 'Доп. информация',
         placeholderTitle: 'Заголовок', placeholderNote: 'Текст заметки...',
         placeholderMaster: 'Введите пароль...', placeholderConfirm: 'Повторите пароль...',
-        noLogin: 'Без логина'
+        noLogin: 'Без логина',
+        favTitle: 'Добавить в избранное', unfavTitle: 'Убрать из избранного'
     },
     en: {
         menu: 'Menu', theme: 'Theme', savedRecords: 'Saved records',
-        passwords: 'Passwords', contacts: 'Contacts', notes: 'Notes', backup: 'Backup',
-        export: 'Export', import: 'Import', language: 'Language', back: 'Back',
+        passwords: 'Passwords', contacts: 'Contacts', notes: 'Notes', favorites: 'Favorites',
+        backup: 'Backup', export: 'Export', import: 'Import', language: 'Language', back: 'Back',
         edit: 'Edit', save: 'Save', delete: 'Delete',
         createMaster: 'Create master password', masterDesc: 'Key to the vault. Remember it — it cannot be recovered.',
         createVault: 'Create vault', unlock: 'Unlock', enterMaster: 'Enter master password',
@@ -515,6 +576,7 @@ const translations = {
         toastDeleted: 'Record deleted', toastLocked: 'Vault locked',
         toastExported: 'Backup created', toastEmpty: 'Vault is empty',
         toastImported: 'Imported', toastError: 'Error',
+        toastFavAdded: 'Added to favorites', toastFavRemoved: 'Removed from favorites',
         siteRequired: 'Fill in site name and password', nameRequired: 'Enter contact name',
         titleRequired: 'Enter note title', sitePassRequired: 'Site name and password are required',
         nameRequiredEdit: 'Name is required', titleRequiredEdit: 'Title is required',
@@ -526,7 +588,8 @@ const translations = {
         wrongFormat: 'Invalid file format', importError: 'Import error',
         wrongPassOrFile: 'Wrong password or corrupted file',
         saveError: 'Save error',
-        empty: 'Empty',
+        empty: 'Empty', noFavorites: 'No favorite records',
+        lockedMsg: 'Too many attempts. Wait:', lockedSub: 'seconds',
         site: 'Site', login: 'Login', password: 'Password',
         name: 'Name', phone: 'Phone', email: 'Email', extra: 'Extra',
         noteTitle: 'Title', noteText: 'Text',
@@ -536,7 +599,8 @@ const translations = {
         placeholderEmail: 'Email', placeholderExtra: 'Additional info',
         placeholderTitle: 'Title', placeholderNote: 'Note text...',
         placeholderMaster: 'Enter password...', placeholderConfirm: 'Repeat password...',
-        noLogin: 'No login'
+        noLogin: 'No login',
+        favTitle: 'Add to favorites', unfavTitle: 'Remove from favorites'
     }
 };
 
@@ -585,6 +649,66 @@ function applyTranslations() {
         applyTranslations();
     }, 0);
 })();
+
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 60;
+let lockoutInterval = null;
+
+function getAttempts() {
+    try { return parseInt(localStorage.getItem('sp_attempts')) || 0; } catch(e) { return 0; }
+}
+function setAttempts(n) {
+    localStorage.setItem('sp_attempts', n.toString());
+}
+function getLockoutEnd() {
+    try { return parseInt(localStorage.getItem('sp_lockout_end')) || 0; } catch(e) { return 0; }
+}
+function setLockoutEnd(ts) {
+    localStorage.setItem('sp_lockout_end', ts.toString());
+}
+function clearLockout() {
+    localStorage.removeItem('sp_attempts');
+    localStorage.removeItem('sp_lockout_end');
+}
+
+function showLockout() {
+    const overlay = document.getElementById('lockoutOverlay');
+    const timerEl = document.getElementById('lockoutTimer');
+    overlay.classList.remove('hidden');
+    
+    const updateTimer = () => {
+        const remaining = Math.max(0, Math.ceil((getLockoutEnd() - Date.now()) / 1000));
+        timerEl.textContent = remaining;
+        if (remaining <= 0) {
+            clearInterval(lockoutInterval);
+            lockoutInterval = null;
+            overlay.classList.add('hidden');
+            clearLockout();
+            document.getElementById('authErr').textContent = '';
+            document.getElementById('masterPass').disabled = false;
+            document.getElementById('masterConfirm').disabled = false;
+            document.getElementById('authBtn').disabled = false;
+        }
+    };
+    
+    updateTimer();
+    lockoutInterval = setInterval(updateTimer, 1000);
+}
+
+function checkLockout() {
+    const end = getLockoutEnd();
+    if (end > Date.now()) {
+        showLockout();
+        document.getElementById('masterPass').disabled = true;
+        document.getElementById('masterConfirm').disabled = true;
+        document.getElementById('authBtn').disabled = true;
+        return true;
+    }
+    if (end > 0 && end <= Date.now()) {
+        clearLockout();
+    }
+    return false;
+}
 
 let curId = null, curCat = null, editing = false;
 let cryptoKey = null;
@@ -672,24 +796,43 @@ async function decData(o) {
 }
 
 async function handleAuth() {
+    if (checkLockout()) return;
+    
     const p = document.getElementById('masterPass').value;
     const c = document.getElementById('masterConfirm').value;
     const e = document.getElementById('authErr');
     e.textContent = '';
     if (p.length < 4) { e.textContent = '❌ ' + t('minChars'); return; }
     if (p.length > 50) { e.textContent = '❌ ' + t('maxChars'); return; }
-    if (!/^[A-Za-z0-9_]+$/.test(p)) { e.textContent = ' ' + t('onlyLatin'); return; }
+    if (!/^[A-Za-z0-9_]+$/.test(p)) { e.textContent = '❌ ' + t('onlyLatin'); return; }
 
     const has = localStorage.getItem('sp_vault') !== null;
     if (!has) {
         if (p !== c) { e.textContent = '❌ ' + t('passwordsMismatch'); return; }
         cryptoKey = await deriveKey(p);
         await save(data);
+        clearLockout();
         showApp();
     } else {
         cryptoKey = await deriveKey(p);
         const t2 = await load();
-        if (t2 === null) { e.textContent = '❌ ' + t('wrongPassword'); cryptoKey = null; return; }
+        if (t2 === null) {
+            e.textContent = '❌ ' + t('wrongPassword');
+            cryptoKey = null;
+            
+            const attempts = getAttempts() + 1;
+            setAttempts(attempts);
+            
+            if (attempts >= MAX_ATTEMPTS) {
+                setLockoutEnd(Date.now() + LOCKOUT_DURATION * 1000);
+                showLockout();
+                document.getElementById('masterPass').disabled = true;
+                document.getElementById('masterConfirm').disabled = true;
+                document.getElementById('authBtn').disabled = true;
+            }
+            return;
+        }
+        clearLockout();
         showApp();
     }
 }
@@ -757,6 +900,7 @@ function logout() {
     document.getElementById('authTitle').textContent = has ? t('enterMaster') : t('createMaster');
     document.getElementById('masterConfirm').classList.toggle('hidden', has);
     document.getElementById('authBtn').textContent = has ? t('unlock') : t('createVault');
+    checkLockout();
 })();
 
 async function updateStats() {
@@ -765,23 +909,88 @@ async function updateStats() {
     document.getElementById('statCount').textContent = total;
 }
 
-function renderAll() {
-    renderList('accP', data.passwords, 'passwords', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>', i => `${i.site}<span class="list-sub">${i.login||''}</span>`);
-    renderList('accC', data.contacts, 'contacts', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>', i => `${i.name}<span class="list-sub">${i.phone||i.email||''}</span>`);
-    renderList('accN', data.notes, 'notes', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>', i => `${i.title}<span class="list-sub">${(i.text||'').substring(0,30)}...</span>`);
+const ICONS = {
+    password: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>',
+    contact: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+    note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>',
+    star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>',
+    copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>',
+    eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>',
+    eyeOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'
+};
+
+// Переключение избранного для любой категории
+async function toggleFavorite(cat, id, event) {
+    event.stopPropagation();
+    const idx = data[cat].findIndex(i => i.id === id);
+    if (idx === -1) return;
+    data[cat][idx].favorite = !data[cat][idx].favorite;
+    await save(data);
+    showToast(data[cat][idx].favorite ? t('toastFavAdded') : t('toastFavRemoved'), 'info');
 }
-function renderList(id, arr, cat, icon, textFn) {
+
+function renderAll() {
+    // Избранное — собираем из всех категорий
+    const allFavs = [
+        ...data.passwords.filter(i => i.favorite).map(i => ({...i, _cat: 'passwords'})),
+        ...data.contacts.filter(i => i.favorite).map(i => ({...i, _cat: 'contacts'})),
+        ...data.notes.filter(i => i.favorite).map(i => ({...i, _cat: 'notes'}))
+    ];
+    renderFavoritesList('accFav', allFavs);
+    
+    // Сортировка: избранные сверху
+    const sortedPasswords = [...data.passwords].sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0));
+    const sortedContacts = [...data.contacts].sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0));
+    const sortedNotes = [...data.notes].sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0));
+    
+    renderList('accP', sortedPasswords, 'passwords', ICONS.password, i => `${i.site}<span class="list-sub">${i.login||''}</span>`, true);
+    renderList('accC', sortedContacts, 'contacts', ICONS.contact, i => `${i.name}<span class="list-sub">${i.phone||i.email||''}</span>`, true);
+    renderList('accN', sortedNotes, 'notes', ICONS.note, i => `${i.title}<span class="list-sub">${(i.text||'').substring(0,30)}...</span>`, true);
+}
+
+function renderFavoritesList(id, arr) {
+    const el = document.getElementById(id);
+    if (!arr || arr.length === 0) {
+        el.innerHTML = `<div style="padding:10px; color:var(--muted); font-size:.85em; text-align:center;">${t('noFavorites')}</div>`;
+        return;
+    }
+    el.innerHTML = arr.map(i => {
+        let icon, text;
+        if (i._cat === 'passwords') {
+            icon = ICONS.password;
+            text = `${i.site}<span class="list-sub">${i.login||''}</span>`;
+        } else if (i._cat === 'contacts') {
+            icon = ICONS.contact;
+            text = `${i.name}<span class="list-sub">${i.phone||i.email||''}</span>`;
+        } else {
+            icon = ICONS.note;
+            text = `${i.title}<span class="list-sub">${(i.text||'').substring(0,30)}...</span>`;
+        }
+        return `
+        <div class="list-item favorite" onclick="openDetail('${i._cat}', ${i.id})">
+            <div class="list-icon">${icon}</div>
+            <div class="list-text">${text}</div>
+            <button class="fav-btn active" onclick="toggleFavorite('${i._cat}', ${i.id}, event)" title="${t('unfavTitle')}">${ICONS.star}</button>
+        </div>
+    `}).join('');
+}
+
+function renderList(id, arr, cat, icon, textFn, showFav) {
     const el = document.getElementById(id);
     if (!arr || arr.length === 0) {
         el.innerHTML = `<div style="padding:10px; color:var(--muted); font-size:.85em; text-align:center;">${t('empty')}</div>`;
         return;
     }
-    el.innerHTML = arr.map(i => `
-        <div class="list-item" onclick="openDetail('${cat}', ${i.id})">
+    el.innerHTML = arr.map(i => {
+        const isFav = i.favorite ? 'favorite' : '';
+        const favBtn = showFav ? `<button class="fav-btn ${i.favorite ? 'active' : ''}" onclick="toggleFavorite('${cat}', ${i.id}, event)" title="${i.favorite ? t('unfavTitle') : t('favTitle')}">${ICONS.star}</button>` : '';
+        return `
+        <div class="list-item ${isFav}" onclick="openDetail('${cat}', ${i.id})">
             <div class="list-icon">${icon}</div>
             <div class="list-text">${textFn(i)}</div>
+            ${favBtn}
         </div>
-    `).join('');
+    `}).join('');
 }
 
 function openDetail(cat, id) {
@@ -793,20 +1002,20 @@ function openDetail(cat, id) {
 
     if (cat === 'passwords') {
         c.innerHTML = `
-            <div class="field"><div class="field-label">${t('site')}</div><div class="field-row"><input type="text" class="field-input" id="dSite" readonly value="${esc(item.site)}"><button class="btn sec icon" onclick="copyF('dSite')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
-            <div class="field"><div class="field-label">${t('login')}</div><div class="field-row"><input type="text" class="field-input" id="dLogin" readonly value="${esc(item.login||'')}"><button class="btn sec icon" onclick="copyF('dLogin')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
-            <div class="field"><div class="field-label">${t('password')}</div><div class="field-row"><input type="password" class="field-input" id="dPass" readonly value="${esc(item.pass)}"><button class="btn sec icon" id="btnEye" onclick="toggleEye()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button><button class="btn sec icon" onclick="copyF('dPass')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
+            <div class="field"><div class="field-label">${t('site')}</div><div class="field-row"><input type="text" class="field-input" id="dSite" readonly value="${esc(item.site)}"><button class="btn sec icon" onclick="copyF('dSite')">${ICONS.copy}</button></div></div>
+            <div class="field"><div class="field-label">${t('login')}</div><div class="field-row"><input type="text" class="field-input" id="dLogin" readonly value="${esc(item.login||'')}"><button class="btn sec icon" onclick="copyF('dLogin')">${ICONS.copy}</button></div></div>
+            <div class="field"><div class="field-label">${t('password')}</div><div class="field-row"><input type="password" class="field-input" id="dPass" readonly value="${esc(item.pass)}"><button class="btn sec icon" id="btnEye" onclick="toggleEye()">${ICONS.eye}</button><button class="btn sec icon" onclick="copyF('dPass')">${ICONS.copy}</button></div></div>
         `;
     } else if (cat === 'contacts') {
         c.innerHTML = `
-            <div class="field"><div class="field-label">${t('name')}</div><div class="field-row"><input type="text" class="field-input" id="dName" readonly value="${esc(item.name)}"><button class="btn sec icon" onclick="copyF('dName')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
-            <div class="field"><div class="field-label">${t('phone')}</div><div class="field-row"><input type="text" class="field-input" id="dPhone" readonly value="${esc(item.phone||'')}"><button class="btn sec icon" onclick="copyF('dPhone')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
-            <div class="field"><div class="field-label">${t('email')}</div><div class="field-row"><input type="text" class="field-input" id="dEmail" readonly value="${esc(item.email||'')}"><button class="btn sec icon" onclick="copyF('dEmail')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
-            <div class="field"><div class="field-label">${t('extra')}</div><div class="field-row"><input type="text" class="field-input" id="dExtra" readonly value="${esc(item.extra||'')}"><button class="btn sec icon" onclick="copyF('dExtra')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
+            <div class="field"><div class="field-label">${t('name')}</div><div class="field-row"><input type="text" class="field-input" id="dName" readonly value="${esc(item.name)}"><button class="btn sec icon" onclick="copyF('dName')">${ICONS.copy}</button></div></div>
+            <div class="field"><div class="field-label">${t('phone')}</div><div class="field-row"><input type="text" class="field-input" id="dPhone" readonly value="${esc(item.phone||'')}"><button class="btn sec icon" onclick="copyF('dPhone')">${ICONS.copy}</button></div></div>
+            <div class="field"><div class="field-label">${t('email')}</div><div class="field-row"><input type="text" class="field-input" id="dEmail" readonly value="${esc(item.email||'')}"><button class="btn sec icon" onclick="copyF('dEmail')">${ICONS.copy}</button></div></div>
+            <div class="field"><div class="field-label">${t('extra')}</div><div class="field-row"><input type="text" class="field-input" id="dExtra" readonly value="${esc(item.extra||'')}"><button class="btn sec icon" onclick="copyF('dExtra')">${ICONS.copy}</button></div></div>
         `;
     } else {
         c.innerHTML = `
-            <div class="field"><div class="field-label">${t('noteTitle')}</div><div class="field-row"><input type="text" class="field-input" id="dTitle" readonly value="${esc(item.title)}"><button class="btn sec icon" onclick="copyF('dTitle')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div></div>
+            <div class="field"><div class="field-label">${t('noteTitle')}</div><div class="field-row"><input type="text" class="field-input" id="dTitle" readonly value="${esc(item.title)}"><button class="btn sec icon" onclick="copyF('dTitle')">${ICONS.copy}</button></div></div>
             <div class="field"><div class="field-label">${t('noteText')}</div><textarea class="field-input" id="dText" readonly style="min-height:140px;">${esc(item.text||'')}</textarea></div>
         `;
     }
@@ -819,13 +1028,8 @@ function esc(s) { return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;'); 
 
 function toggleEye() {
     const i = document.getElementById('dPass'), b = document.getElementById('btnEye');
-    if (i.type === 'password') { 
-        i.type = 'text'; 
-        b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'; 
-    } else { 
-        i.type = 'password'; 
-        b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'; 
-    }
+    if (i.type === 'password') { i.type = 'text'; b.innerHTML = ICONS.eyeOff; }
+    else { i.type = 'password'; b.innerHTML = ICONS.eye; }
 }
 function copyF(id) {
     navigator.clipboard.writeText(document.getElementById(id).value);
@@ -877,7 +1081,7 @@ async function deleteItem() {
 async function addPassword() {
     const s = document.getElementById('pSite').value.trim(), l = document.getElementById('pLogin').value.trim(), p = document.getElementById('pPass').value.trim();
     if (!s || !p) { showToast(t('siteRequired'), 'error'); return; }
-    data.passwords.push({id: Date.now(), site:s, login:l, pass:p});
+    data.passwords.push({id: Date.now(), site:s, login:l, pass:p, favorite:false});
     await save(data);
     document.getElementById('pSite').value=''; document.getElementById('pLogin').value=''; document.getElementById('pPass').value='';
     showToast(t('toastSaved'), 'success');
@@ -885,7 +1089,7 @@ async function addPassword() {
 async function addContact() {
     const n = document.getElementById('cName').value.trim();
     if (!n) { showToast(t('nameRequired'), 'error'); return; }
-    data.contacts.push({id: Date.now(), name:n, phone:document.getElementById('cPhone').value.trim(), email:document.getElementById('cEmail').value.trim(), extra:document.getElementById('cExtra').value.trim()});
+    data.contacts.push({id: Date.now(), name:n, phone:document.getElementById('cPhone').value.trim(), email:document.getElementById('cEmail').value.trim(), extra:document.getElementById('cExtra').value.trim(), favorite:false});
     await save(data);
     ['cName','cPhone','cEmail','cExtra'].forEach(i => document.getElementById(i).value='');
     showToast(t('toastSaved'), 'success');
@@ -893,7 +1097,7 @@ async function addContact() {
 async function addNote() {
     const tt = document.getElementById('nTitle').value.trim();
     if (!tt) { showToast(t('titleRequired'), 'error'); return; }
-    data.notes.push({id: Date.now(), title:tt, text:document.getElementById('nText').value.trim()});
+    data.notes.push({id: Date.now(), title:tt, text:document.getElementById('nText').value.trim(), favorite:false});
     await save(data);
     document.getElementById('nTitle').value=''; document.getElementById('nText').value='';
     showToast(t('toastSaved'), 'success');
@@ -918,9 +1122,9 @@ async function importVault(ev) {
                 const tt = await decData(imp);
                 if (tt && tt.passwords && tt.contacts && tt.notes) {
                     const m = {
-                        passwords: [...data.passwords, ...tt.passwords.filter(i => !data.passwords.some(c => c.id===i.id))],
-                        contacts: [...data.contacts, ...tt.contacts.filter(i => !data.contacts.some(c => c.id===i.id))],
-                        notes: [...data.notes, ...tt.notes.filter(i => !data.notes.some(c => c.id===i.id))]
+                        passwords: [...data.passwords, ...tt.passwords.map(i => ({...i, favorite: i.favorite || false})).filter(i => !data.passwords.some(c => c.id===i.id))],
+                        contacts: [...data.contacts, ...tt.contacts.map(i => ({...i, favorite: i.favorite || false})).filter(i => !data.contacts.some(c => c.id===i.id))],
+                        notes: [...data.notes, ...tt.notes.map(i => ({...i, favorite: i.favorite || false})).filter(i => !data.notes.some(c => c.id===i.id))]
                     };
                     await save(m);
                     showToast(`${t('toastImported')}: ${tt.passwords.length} ${t('passwords').toLowerCase()}, ${tt.contacts.length} ${t('contacts').toLowerCase()}, ${tt.notes.length} ${t('notes').toLowerCase()}`, 'success');
