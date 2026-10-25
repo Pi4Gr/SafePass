@@ -22,7 +22,6 @@
     --gold: #fbbf24; --border: rgba(255,255,255,0.05); --shadow: 0 10px 40px rgba(0,0,0,0.6);
 }
 
-/* ГЛОБАЛЬНЫЕ ПЛАВНЫЕ ПЕРЕХОДЫ */
 * { 
     margin:0; padding:0; box-sizing:border-box; 
     font-family:'Segoe UI',system-ui,sans-serif; 
@@ -35,9 +34,8 @@ body {
     display:flex; flex-direction:column; overflow-x:hidden; position: relative;
 }
 
-/* Плавный анимированный фон БЕЗ сужения по краям */
 body::before {
-    content: ''; position: fixed; inset: -10%; /* Запас по краям, чтобы не было видно границ */
+    content: ''; position: fixed; inset: -10%;
     background: radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
                 radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.15) 0%, transparent 50%),
                 radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
@@ -91,24 +89,26 @@ h1 svg { width: 28px; height: 28px; flex-shrink: 0; }
 .overlay { position:fixed; inset:0; background: rgba(0,0,0,0.6); z-index:199; opacity:0; pointer-events:none; transition: opacity 0.4s ease; }
 .overlay.active { opacity:1; pointer-events:all; }
 
+/* ИСПРАВЛЕНИЕ 1: Скролл всего бокового меню */
 .sidebar {
-    position:fixed; top:0; left:-340px; width:320px; height:100%;
+    position:fixed; top:0; left:-340px; width:320px; height:100vh;
     background: var(--card); backdrop-filter: var(--glass);
     border-right: 1px solid var(--border); z-index:200;
     padding: 24px 20px; display:flex; flex-direction:column; gap:22px;
     box-shadow: var(--shadow); 
+    overflow-y: auto; /* Прокрутка теперь здесь */
     transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s ease, border-color 0.4s ease;
 }
 .sidebar.active { left:0; }
 
-.sidebar-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.sidebar-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-shrink: 0; }
 .close-btn { background:none; border:none; color:var(--muted); cursor:pointer; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:8px; }
 .close-btn svg { width: 20px; height: 20px; }
 .close-btn:hover { background: rgba(255,255,255,0.08); color: var(--text); transform: rotate(90deg); }
 
-.section-label { font-size:.75em; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:14px; font-weight:700; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.section-label { font-size:.75em; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:14px; font-weight:700; padding-bottom: 6px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 
-.theme-list { display:flex; gap:16px; justify-content: center; padding: 10px 0; }
+.theme-list { display:flex; gap:16px; justify-content: center; padding: 10px 0; flex-shrink: 0; }
 .theme-circle {
     width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
     border: 3px solid transparent;
@@ -121,7 +121,7 @@ h1 svg { width: 28px; height: 28px; flex-shrink: 0; }
 .theme-circle[data-theme="light"] { background: linear-gradient(135deg, #f8fafc, #e2e8f0); border: 2px solid #cbd5e1; }
 .theme-circle[data-theme="dark"] { background: linear-gradient(135deg, #020617, #1e293b); }
 
-.stats-box { background: rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:12px; padding:16px; display:flex; justify-content:space-between; align-items:center; }
+.stats-box { background: rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:12px; padding:16px; display:flex; justify-content:space-between; align-items:center; flex-shrink: 0; }
 .stat-val { font-size:1.6em; font-weight:800; color: var(--primary); }
 .stat-lbl { font-size:.85em; color: var(--muted); }
 
@@ -130,29 +130,23 @@ h1 svg { width: 28px; height: 28px; flex-shrink: 0; }
     display:flex; justify-content:space-between; align-items:center;
     padding: 13px 14px; background: rgba(0,0,0,0.2); border:1px solid var(--border);
     border-radius: 10px; cursor:pointer; font-weight:700; font-size:.95em; user-select:none;
+    flex-shrink: 0;
 }
 .acc-header:hover { border-color: var(--primary); background: rgba(59,130,246,0.05); transform: translateX(3px); }
 .acc-arrow { transition: transform 0.4s ease; color: var(--muted); display: flex; }
 .acc-arrow svg { width: 16px; height: 16px; }
 .acc-header.open .acc-arrow { transform: rotate(180deg); }
 
-/* ИСПРАВЛЕНИЕ: Прокрутка для большого количества записей */
+/* ИСПРАВЛЕНИЕ: Убрана внутренняя прокрутка, аккордеон просто раскрывается, а скроллит всё меню */
 .acc-content { 
     max-height: 0; overflow: hidden; 
     transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
     display:flex; flex-direction:column; gap:7px; margin-top:0; opacity: 0;
 }
 .acc-content.open { 
-    max-height: 450px; /* Оптимальная высота для меню */
-    overflow-y: auto;  /* Включаем вертикальную прокрутку */
-    opacity: 1; margin-top:8px; padding-right: 4px;
+    max-height: 2000px; 
+    opacity: 1; margin-top:8px; 
 }
-
-/* Стилизация скроллбара внутри аккордеона */
-.acc-content.open::-webkit-scrollbar { width: 6px; }
-.acc-content.open::-webkit-scrollbar-track { background: rgba(128,128,128,0.1); border-radius: 3px; }
-.acc-content.open::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
-.acc-content.open::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
 .list-item {
     background: rgba(0,0,0,0.15); border:1px solid var(--border);
@@ -175,7 +169,7 @@ h1 svg { width: 28px; height: 28px; flex-shrink: 0; }
 .fav-btn.active { color: var(--gold); }
 .fav-btn.active svg { fill: var(--gold); transform: scale(1.1); }
 
-.backup-section { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--border); }
+.backup-section { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--border); flex-shrink: 0; }
 .backup-row { display:flex; gap:10px; }
 .backup-btn {
     flex:1; padding:12px; background: rgba(0,0,0,0.2); border:1px solid var(--border);
@@ -186,7 +180,7 @@ h1 svg { width: 28px; height: 28px; flex-shrink: 0; }
 .backup-btn svg { width: 16px; height: 16px; }
 .backup-btn input { display:none; }
 
-.lang-switcher { display: flex; gap: 8px; margin-top: 12px; }
+.lang-switcher { display: flex; gap: 8px; margin-top: 12px; flex-shrink: 0; }
 .lang-btn {
     flex: 1; padding: 10px; background: rgba(0,0,0,0.2); border: 1px solid var(--border);
     border-radius: 10px; color: var(--muted); cursor: pointer; font-size: 0.9em; font-weight: 700; text-align: center;
@@ -674,8 +668,7 @@ function applyTranslations() {
     }, 0);
 })();
 
-const MAX_ATTEMPTS = 5;
-const LOCKOUT_DURATIONS = [60, 300, 600]; // 1 мин, 5 мин, 10 мин
+// === ИСПРАВЛЕНИЕ 3: Прогрессивная блокировка ===
 const RESET_INTERVAL = 24 * 60 * 60 * 1000; // 24 часа
 let lockoutInterval = null;
 
@@ -683,7 +676,11 @@ function getAttempts() { try { return parseInt(localStorage.getItem('sp_attempts
 function setAttempts(n) { localStorage.setItem('sp_attempts', n.toString()); }
 function getLockoutEnd() { try { return parseInt(localStorage.getItem('sp_lockout_end')) || 0; } catch(e) { return 0; } }
 function setLockoutEnd(ts) { localStorage.setItem('sp_lockout_end', ts.toString()); }
-function clearLockout() { localStorage.removeItem('sp_attempts'); localStorage.removeItem('sp_lockout_end'); }
+
+function clearLockout() {
+    localStorage.removeItem('sp_attempts');
+    localStorage.removeItem('sp_lockout_end');
+}
 
 function checkAndResetAttempts() {
     const lastReset = parseInt(localStorage.getItem('sp_last_reset') || '0');
@@ -700,19 +697,23 @@ function showLockout() {
     const overlay = document.getElementById('lockoutOverlay');
     const timerEl = document.getElementById('lockoutTimer');
     overlay.classList.remove('hidden');
+    
     const updateTimer = () => {
-        const remaining = Math.max(0, Math.ceil((getLockoutEnd() - Date.now()) / 1000));
+        const end = getLockoutEnd();
+        const remaining = Math.max(0, Math.ceil((end - Date.now()) / 1000));
         timerEl.textContent = remaining;
         if (remaining <= 0) {
             clearInterval(lockoutInterval);
             lockoutInterval = null;
             overlay.classList.add('hidden');
+            localStorage.removeItem('sp_lockout_end');
             document.getElementById('authErr').textContent = '';
             document.getElementById('masterPass').disabled = false;
             document.getElementById('masterConfirm').disabled = false;
             document.getElementById('authBtn').disabled = false;
         }
     };
+    
     updateTimer();
     lockoutInterval = setInterval(updateTimer, 1000);
 }
@@ -721,13 +722,18 @@ function checkLockout() {
     checkAndResetAttempts();
     const end = getLockoutEnd();
     if (end > Date.now()) {
-        showLockout(Math.ceil((end - Date.now()) / 1000));
+        showLockout();
         document.getElementById('masterPass').disabled = true;
         document.getElementById('masterConfirm').disabled = true;
         document.getElementById('authBtn').disabled = true;
         return true;
     }
-    if (end > 0 && end <= Date.now()) clearLockout();
+    if (end > 0 && end <= Date.now()) {
+        localStorage.removeItem('sp_lockout_end');
+        document.getElementById('masterPass').disabled = false;
+        document.getElementById('masterConfirm').disabled = false;
+        document.getElementById('authBtn').disabled = false;
+    }
     return false;
 }
 
@@ -807,6 +813,7 @@ async function decData(o) {
 
 async function handleAuth() {
     if (checkLockout()) return;
+    
     const p = document.getElementById('masterPass').value;
     const c = document.getElementById('masterConfirm').value;
     const e = document.getElementById('authErr');
@@ -828,15 +835,26 @@ async function handleAuth() {
         if (t2 === null) {
             e.textContent = '❌ ' + t('wrongPassword');
             cryptoKey = null;
+            
             const attempts = getAttempts() + 1;
             setAttempts(attempts);
-            const durationIndex = Math.min(attempts - 1, LOCKOUT_DURATIONS.length - 1);
-            const lockoutDuration = LOCKOUT_DURATIONS[durationIndex] * 1000;
-            setLockoutEnd(Date.now() + lockoutDuration);
-            showLockout(LOCKOUT_DURATIONS[durationIndex]);
-            document.getElementById('masterPass').disabled = true;
-            document.getElementById('masterConfirm').disabled = true;
-            document.getElementById('authBtn').disabled = true;
+            
+            let lockoutDuration = 0;
+            if (attempts === 5) {
+                lockoutDuration = 60;
+            } else if (attempts === 10) {
+                lockoutDuration = 300;
+            } else if (attempts > 10) {
+                lockoutDuration = 600;
+            }
+            
+            if (lockoutDuration > 0) {
+                setLockoutEnd(Date.now() + lockoutDuration * 1000);
+                showLockout();
+                document.getElementById('masterPass').disabled = true;
+                document.getElementById('masterConfirm').disabled = true;
+                document.getElementById('authBtn').disabled = true;
+            }
             return;
         }
         clearLockout();
@@ -885,12 +903,15 @@ function lockApp() {
     showToast(t('toastLocked'), 'info');
 }
 
+// ИСПРАВЛЕНИЕ 2: Корректная инициализация при обновлении
 (function(){
     const has = localStorage.getItem('sp_vault') !== null;
     document.getElementById('authTitle').textContent = has ? t('enterMaster') : t('createMaster');
     document.getElementById('masterConfirm').classList.toggle('hidden', has);
     document.getElementById('authBtn').textContent = has ? t('unlock') : t('createVault');
-    if (!localStorage.getItem('sp_last_reset')) localStorage.setItem('sp_last_reset', Date.now().toString());
+    if (!localStorage.getItem('sp_last_reset')) {
+        localStorage.setItem('sp_last_reset', Date.now().toString());
+    }
     checkLockout();
 })();
 
